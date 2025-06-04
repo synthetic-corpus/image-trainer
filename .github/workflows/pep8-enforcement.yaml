@@ -13,12 +13,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # Fetch all history for git diff
+        fetch-depth: 0 # IMPORTANT: Fetch all history for git diff to work correctly
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x' # Use your desired Python version (e.g., '3.9', '3.10', '3.11')
+        python-version: '3.x' # Specify your Python version (e.g., '3.9', '3.10', '3.11')
 
     - name: Install flake8
       run: pip install flake8
@@ -26,7 +26,9 @@ jobs:
     - name: Get changed Python files
       id: changed-files
       run: |
-        CHANGED_PYTHON_FILES=$(git diff --name-only --diff-filter=ACM ${{ github.event.before }} ${{ github.sha }} | grep '\.py$')
+        # Use github.event.pull_request.base.sha for the base of the PR.
+        # This is generally more reliable for PRs than github.event.before.
+        CHANGED_PYTHON_FILES=$(git diff --name-only --diff-filter=ACM ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.py$')
         echo "changed_python_files=${CHANGED_PYTHON_FILES}" >> $GITHUB_OUTPUT
       shell: bash
 
@@ -36,5 +38,14 @@ jobs:
         echo "Checking the following files for PEP 8 compliance:"
         echo "${{ steps.changed-files.outputs.changed_python_files }}"
         echo ""
+        # The flake8 command is only executed if the 'if' condition above evaluates to true.
+        # If flake8 finds issues, it will exit with a non-zero code, causing this step to fail,
+        # and subsequently blocking the PR merge if branch protection is enabled.
         flake8 ${{ steps.changed-files.outputs.changed_python_files }}
       shell: bash
+
+    - name: Report success if no Python files were changed (Optional, for clarity)
+      # This step only runs if the 'Run flake8' step was skipped due to no Python files being found.
+      # It provides a clear message in the GitHub Actions UI.
+      if: success() && !steps.changed-files.outputs.changed_python_files
+      run: echo "No .py files changed in this pull request. PEP 8 compliance check passed (skipped)."
