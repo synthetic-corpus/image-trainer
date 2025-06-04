@@ -26,6 +26,8 @@ jobs:
     - name: Get changed Python files
       id: changed-files
       run: |
+        echo "Base SHA: ${{ github.event.pull_request.base.sha }}"
+        echo "Head SHA: ${{ github.sha }}"
         CHANGED_PYTHON_FILES=$(git diff --name-only --diff-filter=ACM ${{ github.event.before }} ${{ github.sha }} | grep '\.py$')
         echo "changed_python_files=${CHANGED_PYTHON_FILES}" >> $GITHUB_OUTPUT
       shell: bash
