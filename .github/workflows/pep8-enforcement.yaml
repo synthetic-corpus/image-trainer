@@ -1,0 +1,40 @@
+name: PEP 8 Compliance Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pep8_check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch all history for git diff
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x' # Use your desired Python version (e.g., '3.9', '3.10', '3.11')
+
+    - name: Install flake8
+      run: pip install flake8
+
+    - name: Get changed Python files
+      id: changed-files
+      run: |
+        CHANGED_PYTHON_FILES=$(git diff --name-only --diff-filter=ACM ${{ github.event.before }} ${{ github.sha }} | grep '\.py$')
+        echo "changed_python_files=${CHANGED_PYTHON_FILES}" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Run flake8 on changed Python files
+      if: success() && steps.changed-files.outputs.changed_python_files
+      run: |
+        echo "Checking the following files for PEP 8 compliance:"
+        echo "${{ steps.changed-files.outputs.changed_python_files }}"
+        echo ""
+        flake8 ${{ steps.changed-files.outputs.changed_python_files }}
+      shell: bash
