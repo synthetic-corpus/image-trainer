@@ -22,3 +22,4 @@ for w in my_array:
     mydict[w] = myValue
 
 print(mydict)
+bad_array = ['sing', "sing"]
