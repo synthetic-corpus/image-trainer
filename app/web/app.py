@@ -12,6 +12,11 @@ def get_image_url():
     )
 
 
+def extract_filename_from_url(url):
+    """Extract filename from URL."""
+    return url.split('/')[-1]
+
+
 @app.route('/')
 def index():
     # Get the image URL server-side and pass it to the template
@@ -33,8 +38,17 @@ def index():
 @app.route('/select-gender', methods=['POST'])
 def select_gender():
     gender = request.form.get('gender')
-    # Redirect back to main page with gender parameter
-    return redirect(url_for('index', gender=gender))
+    current_image_url = request.form.get('current_image_url', get_image_url())
+
+    # Extract filename from the image URL
+    filename = extract_filename_from_url(current_image_url)
+
+    selection_data = {
+        'gender': gender,
+        'filename': filename
+    }
+
+    return redirect(url_for('index', gender=selection_data['gender']))
 
 
 if __name__ == '__main__':

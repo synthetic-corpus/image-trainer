@@ -34,6 +34,7 @@
                 
                 <!-- Form for gender selection -->
                 <form method="POST" action="{{ url_for('select_gender') }}">
+                    <input type="hidden" name="current_image_url" value="{{ image_url }}">
                     <table cellpadding="5" cellspacing="10">
                         <tr>
                             <td>
@@ -59,7 +60,7 @@
                 {% endif %}
                 
                 <marquee scrollamount="3" behavior="alternate">
-                    <font color="red" face="Comic Sans MS">Welcome to my awesome website! Best viewed in Netscape Navigator 4.0 or Internet Explorer 4.0</font>
+                    <font color="red" face="Impact, Arial, Helvetica">Welcome to my awesome website! Best viewed in Netscape Navigator 4.0 or Internet Explorer 4.0</font>
                 </marquee>
                 <br>
             </td>
