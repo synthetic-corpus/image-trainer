@@ -1,0 +1,1 @@
+This folder is for the application code and corresponding docker files.

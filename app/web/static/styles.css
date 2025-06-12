@@ -1,0 +1,54 @@
+body {
+  font-family: "Times New Roman", Times, serif;
+  margin: 0;
+  padding: 0;
+  background-color: #ccccff;
+}
+
+.retro-button {
+  background-color: #c0c0c0;
+  border: outset 3px #dddddd;
+  color: #000000;
+  font-family: "Arial", sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 5px 15px;
+  cursor: pointer;
+}
+
+.retro-button:active {
+  border-style: inset;
+}
+
+#image-container {
+  background-color: #ffffff;
+  padding: 10px;
+  display: inline-block;
+}
+
+.message-box {
+  background-color: #ffff99;
+  border: 2px solid #ff0000;
+  padding: 10px;
+  display: inline-block;
+}
+
+.selection-display {
+  background-color: #ccffcc;
+  border: 1px solid #008000;
+  padding: 5px;
+  display: inline-block;
+}
+
+a:link {
+  color: #0000ff;
+  text-decoration: underline;
+}
+
+a:visited {
+  color: #800080;
+}
+
+a:hover {
+  color: #ff0000;
+}
