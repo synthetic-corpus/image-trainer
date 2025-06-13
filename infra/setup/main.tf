@@ -8,8 +8,7 @@ terraform {
 
   backend "s3" {
     bucket         = "jtg-terraform-buckets"
-    key            = "${var.project}-deploy"
-    workspace_key_prefix = "${var.project}-deploy-env"
+    key            = "image-trainer-one-setup"
     region         = "us-west-2"
     encrypt        = true
     dynamodb_table = "terraform-lock-table"
@@ -23,13 +22,7 @@ provider "aws" {
       Environment = terraform.workspace
       Project     = var.project
       contact     = var.contact
-      ManageBy    = "Terraform/deploy"
+      ManageBy    = "Terraform/setup"
     }
   }
 }
-
-locals {
-  prefix = "${var.prefix}-${terraform.workspace}"
-}
-
-data "aws_region" "current" {}

@@ -12,7 +12,7 @@ variable "prefix" {
 variable "project_name" {
   description = "Name of the project for resource naming"
   type        = string
-  default     = "flask-retro-project"
+  default     = "image-trainer-one"
 }
 
 variable "environment" {
@@ -89,7 +89,7 @@ variable "tf_state_lock_table" {
 
 variable "project" {
   description = "This be the name of the project, yarg"
-  default     = "terrform-ml-simple"
+  default     = "image-trainer-one"
 }
 
 variable "contact" {
