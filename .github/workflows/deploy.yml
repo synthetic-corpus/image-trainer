@@ -20,6 +20,13 @@ env:
   AWS_REGION: "us-west-2"
 
 jobs:
+  lint:
+    name: Lint Infrastructure
+    uses: ./.github/workflows/lint.yml
+    secrets:
+      DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
   deploy:
     name: Deploy Infrastructure
     runs-on: ubuntu-latest
