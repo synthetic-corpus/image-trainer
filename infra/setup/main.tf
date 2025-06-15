@@ -26,3 +26,7 @@ provider "aws" {
     }
   }
 }
+
+locals {
+  s3_bucket_arn = data.aws_s3_bucket.existing.arn
+}

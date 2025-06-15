@@ -17,3 +17,7 @@ variable "contact" {
   description = "who to contact about these resources"
   default     = "joel@joelgonzaga.com"
 }
+
+data "aws_s3_bucket" "existing" {
+  bucket = "ai-test-bucket-jtg"
+}

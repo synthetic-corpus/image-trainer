@@ -478,7 +478,7 @@ data "aws_iam_policy_document" "source_s3_bucket" {
       "s3:PutBucketPolicy",
       "s3:DeleteBucketPolicy"
     ]
-    resources = ["${data.aws_s3_bucket.existing.arn}"]
+    resources = ["${local.s3_bucket_arn}"]
   }
 }
 
