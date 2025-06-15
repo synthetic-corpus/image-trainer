@@ -340,3 +340,119 @@ resource "aws_iam_user_policy_attachment" "efs" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.efs.arn
 }
+
+#########################
+# Policy for Lambda access #
+#########################
+
+data "aws_iam_policy_document" "lambda" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:CreateFunction",
+      "lambda:DeleteFunction",
+      "lambda:GetFunction",
+      "lambda:GetFunctionConfiguration",
+      "lambda:UpdateFunctionCode",
+      "lambda:UpdateFunctionConfiguration",
+      "lambda:ListVersionsByFunction",
+      "lambda:ListAliases",
+      "lambda:CreateAlias",
+      "lambda:DeleteAlias",
+      "lambda:UpdateAlias",
+      "lambda:GetAlias",
+      "lambda:InvokeFunction",
+      "lambda:AddPermission",
+      "lambda:RemovePermission",
+      "lambda:GetPolicy",
+      "lambda:TagResource",
+      "lambda:UntagResource",
+      "lambda:ListTags",
+      "lambda:PublishVersion",
+      "lambda:CreateEventSourceMapping",
+      "lambda:DeleteEventSourceMapping",
+      "lambda:GetEventSourceMapping",
+      "lambda:ListEventSourceMappings",
+      "lambda:UpdateEventSourceMapping",
+      "lambda:ListFunctions",
+      "lambda:ListLayers",
+      "lambda:GetLayerVersion",
+      "lambda:CreateLayerVersion",
+      "lambda:DeleteLayerVersion",
+      "lambda:ListLayerVersions",
+      "lambda:GetAccountSettings",
+      "lambda:UpdateFunctionEventInvokeConfig",
+      "lambda:GetFunctionEventInvokeConfig",
+      "lambda:DeleteFunctionEventInvokeConfig",
+      "lambda:PutFunctionEventInvokeConfig"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:GetRole",
+      "iam:AttachRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:PutRolePolicy",
+      "iam:DeleteRolePolicy",
+      "iam:GetRolePolicy",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListRolePolicies",
+      "iam:UpdateAssumeRolePolicy",
+      "iam:TagRole",
+      "iam:UntagRole",
+      "iam:ListRoleTags",
+      "iam:PassRole"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "lambda-deploy" {
+  name        = "${aws_iam_user.cd.name}-lambda"
+  description = "Allow user to manage Lambda functions and roles."
+  policy      = data.aws_iam_policy_document.lambda.json
+}
+
+resource "aws_iam_user_policy_attachment" "lambda-deploy" {
+  user       = aws_iam_user.cd.name
+  policy_arn = aws_iam_policy.lambda-deploy.arn
+}
+
+#########################
+# Policy for ECR access #
+#########################
+
+data "aws_iam_policy_document" "ecr" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:PutImage"
+    ]
+    resources = [
+      "arn:aws:ecr:*:*:repository/web-app",
+      "arn:aws:ecr:*:*:repository/web-proxy",
+      "arn:aws:ecr:*:*:repository/hash-lambda"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "ecr" {
+  name        = "${aws_iam_user.cd.name}-ecr"
+  description = "Allow user to push and pull images to/from specific ECR repositories."
+  policy      = data.aws_iam_policy_document.ecr.json
+}
+
+resource "aws_iam_user_policy_attachment" "ecr" {
+  user       = aws_iam_user.cd.name
+  policy_arn = aws_iam_policy.ecr.arn
+}
