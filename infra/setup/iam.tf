@@ -410,6 +410,14 @@ data "aws_iam_policy_document" "ecr" {
       "arn:aws:ecr:*:*:repository/hash-lambda"
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:GetAuthorizationToken"
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "ecr" {
