@@ -465,3 +465,83 @@ resource "aws_iam_user_policy_attachment" "ecr" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.ecr.arn
 }
+
+############################################
+# Policies related to the source s3 Bucket #
+############################################
+
+data "aws_iam_policy_document" "source_s3_bucket" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketPolicy",
+      "s3:PutBucketPolicy",
+      "s3:DeleteBucketPolicy"
+    ]
+    resources = ["${data.aws_s3_bucket.existing.arn}"]
+  }
+}
+
+#####################################
+# Policy for CloudFront CDN access #
+####################################
+
+data "aws_iam_policy_document" "cloudfront" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudfront:CreateDistribution",
+      "cloudfront:DeleteDistribution",
+      "cloudfront:GetDistribution",
+      "cloudfront:GetDistributionConfig",
+      "cloudfront:UpdateDistribution",
+      "cloudfront:ListDistributions",
+      "cloudfront:TagResource",
+      "cloudfront:UntagResource",
+      "cloudfront:ListTagsForResource",
+      "cloudfront:CreateCachePolicy",
+      "cloudfront:DeleteCachePolicy",
+      "cloudfront:GetCachePolicy",
+      "cloudfront:UpdateCachePolicy",
+      "cloudfront:ListCachePolicies",
+      "cloudfront:CreateOriginRequestPolicy",
+      "cloudfront:DeleteOriginRequestPolicy",
+      "cloudfront:GetOriginRequestPolicy",
+      "cloudfront:UpdateOriginRequestPolicy",
+      "cloudfront:ListOriginRequestPolicies",
+      "cloudfront:CreateOriginAccessControl",
+      "cloudfront:DeleteOriginAccessControl",
+      "cloudfront:GetOriginAccessControl",
+      "cloudfront:UpdateOriginAccessControl",
+      "cloudfront:ListOriginAccessControls",
+      "cloudfront:CreateFieldLevelEncryptionConfig",
+      "cloudfront:DeleteFieldLevelEncryptionConfig",
+      "cloudfront:GetFieldLevelEncryptionConfig",
+      "cloudfront:UpdateFieldLevelEncryptionConfig",
+      "cloudfront:ListFieldLevelEncryptionConfigs",
+      "cloudfront:CreateFieldLevelEncryptionProfile",
+      "cloudfront:DeleteFieldLevelEncryptionProfile",
+      "cloudfront:GetFieldLevelEncryptionProfile",
+      "cloudfront:UpdateFieldLevelEncryptionProfile",
+      "cloudfront:ListFieldLevelEncryptionProfiles",
+      "cloudfront:GetInvalidation",
+      "cloudfront:CreateInvalidation",
+      "cloudfront:ListInvalidations",
+      "cloudfront:GetStreamingDistribution",
+      "cloudfront:GetStreamingDistributionConfig",
+      "cloudfront:ListStreamingDistributions"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "cloudfront" {
+  name        = "${aws_iam_user.cd.name}-cloudfront"
+  description = "Allow user to manage CloudFront CDN distributions and related resources."
+  policy      = data.aws_iam_policy_document.cloudfront.json
+}
+
+resource "aws_iam_user_policy_attachment" "cloudfront" {
+  user       = aws_iam_user.cd.name
+  policy_arn = aws_iam_policy.cloudfront.arn
+}

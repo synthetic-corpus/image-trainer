@@ -30,6 +30,8 @@ provider "aws" {
 
 locals {
   prefix = "${var.prefix}-${terraform.workspace}"
+  cloudfront_url = "https://${aws_cloudfront_distribution.sources_cdn.domain_name}"
+  s3_bucket_name = var.s3_bucket_name
 }
 
 data "aws_region" "current" {}
