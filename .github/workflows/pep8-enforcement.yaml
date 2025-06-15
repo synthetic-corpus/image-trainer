@@ -1,9 +1,9 @@
 name: PEP 8 Compliance Check
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - '**'  # Run on pushes to any branch
 
 jobs:
   pep8_check:
@@ -26,9 +26,8 @@ jobs:
     - name: Get changed Python files
       id: changed-files
       run: |
-        # Use github.event.pull_request.base.sha for the base of the PR.
-        # This is generally more reliable for PRs than github.event.before.
-        CHANGED_PYTHON_FILES=$(git diff --name-only --diff-filter=ACM ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.py$')
+        # For push events, compare with the previous commit
+        CHANGED_PYTHON_FILES=$(git diff --name-only --diff-filter=ACM ${{ github.event.before }} ${{ github.sha }} | grep '\.py$' | tr '\n' ' ')
         echo "changed_python_files=${CHANGED_PYTHON_FILES}" >> $GITHUB_OUTPUT
       shell: bash
 
@@ -38,14 +37,12 @@ jobs:
         echo "Checking the following files for PEP 8 compliance:"
         echo "${{ steps.changed-files.outputs.changed_python_files }}"
         echo ""
-        # The flake8 command is only executed if the 'if' condition above evaluates to true.
-        # If flake8 finds issues, it will exit with a non-zero code, causing this step to fail,
-        # and subsequently blocking the PR merge if branch protection is enabled.
-        flake8 ${{ steps.changed-files.outputs.changed_python_files }}
+        # Use xargs to properly handle multiple files
+        echo "${{ steps.changed-files.outputs.changed_python_files }}" | xargs flake8
       shell: bash
 
     - name: Report success if no Python files were changed (Optional, for clarity)
       # This step only runs if the 'Run flake8' step was skipped due to no Python files being found.
       # It provides a clear message in the GitHub Actions UI.
       if: success() && !steps.changed-files.outputs.changed_python_files
-      run: echo "No .py files changed in this pull request. PEP 8 compliance check passed (skipped)."
+      run: echo "No .py files changed in this push. PEP 8 compliance check passed (skipped)."
