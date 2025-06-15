@@ -7,12 +7,6 @@ on:
       - prod
     paths:
       - 'infra/**'
-  pull_request:
-    branches:
-      - main
-      - prod
-    paths:
-      - 'infra/**'
 
 env:
   TF_VERSION: "1.6.2"
