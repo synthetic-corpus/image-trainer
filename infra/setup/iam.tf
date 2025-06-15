@@ -42,6 +42,15 @@ data "aws_iam_policy_document" "tf_backend_document" {
     ]
     resources = ["arn:aws:dynamodb:*:*:table/${var.tf_state_lock_table}"]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketNotification",
+      "s3:PutBucketNotification"
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "tf_backend_policy" {

@@ -1,0 +1,157 @@
+####################################
+# Roles and Polices for MD5 Lambda #
+####################################
+resource "aws_iam_role" "lambda_role" {
+  name = "${var.prefix}-lambda-role-${var.environment}"
+
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+
+  tags = {
+    Name    = "${var.prefix}-lambda-role-${var.environment}"
+    Project = var.project_name
+    Contact = var.contact
+  }
+}
+
+data "aws_iam_policy_document" "lambda_assume_role" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "lambda_s3_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      data.aws_s3_bucket.existing.arn,
+      "${data.aws_s3_bucket.existing.arn}/upload/*",
+      "${data.aws_s3_bucket.existing.arn}/sources/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "lambda_s3_policy" {
+  name        = "${var.prefix}-lambda-s3-policy-${var.environment}"
+  description = "Policy for Lambda to access S3 upload and sources folders"
+  policy      = data.aws_iam_policy_document.lambda_s3_policy.json
+
+  tags = {
+    Name    = "${var.prefix}-lambda-s3-policy-${var.environment}"
+    Project = var.project_name
+    Contact = var.contact
+  }
+}
+
+data "aws_iam_policy_document" "lambda_logs_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.prefix}-lambda-${var.environment}:*"]
+  }
+}
+
+resource "aws_iam_policy" "lambda_logs_policy" {
+  name        = "${var.prefix}-lambda-logs-policy-${var.environment}"
+  description = "Policy for Lambda to write to CloudWatch Logs"
+  policy      = data.aws_iam_policy_document.lambda_logs_policy.json
+
+  tags = {
+    Name    = "${var.prefix}-lambda-logs-policy-${var.environment}"
+    Project = var.project_name
+    Contact = var.contact
+  }
+}
+
+#######################################
+# Policy attachements for this Lambda #
+#######################################
+resource "aws_iam_role_policy_attachment" "lambda_s3_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_s3_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_logs_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_logs_policy.arn
+}
+
+resource "aws_cloudwatch_log_group" "lambda_logs" {
+  name              = "/aws/lambda/${var.prefix}-lambda-${var.environment}"
+  retention_in_days = var.lambda_log_retention_days
+
+  tags = {
+    Name    = "${var.prefix}-lambda-logs-${var.environment}"
+    Project = var.project_name
+    Contact = var.contact
+  }
+}
+
+##############################
+# The Lambda Function Itself #
+##############################
+resource "aws_lambda_function" "processor" {
+  function_name = "${var.prefix}-lambda-${var.environment}"
+  role          = aws_iam_role.lambda_role.arn
+  package_type  = "Image"
+  image_uri     = "${var.ecr_lambda_md5_image}:${var.lambda_image_tag}"
+
+  timeout     = var.lambda_timeout
+  memory_size = var.lambda_memory_size
+
+  environment {
+    variables = {
+      S3_BUCKET_NAME = var.s3_bucket_name
+      ENVIRONMENT    = var.environment
+    }
+  }
+
+  depends_on = [
+    aws_cloudwatch_log_group.lambda_logs,
+    aws_iam_role_policy_attachment.lambda_s3_attachment,
+    aws_iam_role_policy_attachment.lambda_logs_attachment
+  ]
+
+  tags = {
+    Name    = "${var.prefix}-lambda-${var.environment}"
+    Project = var.project_name
+    Contact = var.contact
+  }
+}
+
+#######################################
+# S3 Event Triggering for the Lambda #
+#######################################
+resource "aws_s3_bucket_notification" "lambda_notification" {
+  bucket = data.aws_s3_bucket.existing.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.processor.arn
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "upload/"
+  }
+
+  depends_on = [aws_lambda_permission.s3_permission]
+}
+
+resource "aws_lambda_permission" "s3_permission" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.processor.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = data.aws_s3_bucket.existing.arn
+}
