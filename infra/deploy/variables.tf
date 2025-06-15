@@ -118,5 +118,5 @@ variable "ecr_app_image" {
 }
 
 variable "ecr_lambda_md5_image" {
-    description = "Path to the ECR Repo for a lambda."
+  description = "Path to the ECR Repo for a lambda."
 }

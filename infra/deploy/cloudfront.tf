@@ -15,8 +15,8 @@ resource "aws_cloudfront_origin_access_control" "s3_oac" {
 resource "aws_cloudfront_cache_policy" "sources_cache_policy" {
   name        = "${local.prefix}-sources-cache-policy"
   comment     = "Cache policy for S3 sources folder"
-  default_ttl = 3600    # 1 hour
-  max_ttl     = 86400   # 24 hours
+  default_ttl = 3600  # 1 hour
+  max_ttl     = 86400 # 24 hours
   min_ttl     = 0
 
   parameters_in_cache_key_and_forwarded_to_origin {

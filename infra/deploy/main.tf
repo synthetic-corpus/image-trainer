@@ -7,12 +7,12 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "jtg-terraform-buckets"
-    key            = "${var.project}-deploy"
-    workspace_key_prefix = "${var.project}-deploy-env"
-    region         = "us-west-2"
-    encrypt        = true
-    dynamodb_table = "terraform-lock-table"
+    bucket               = "jtg-terraform-buckets"
+    key                  = "image-trainer-one-deploy"
+    workspace_key_prefix = "image-trainer-one-deploy-env"
+    region               = "us-west-2"
+    encrypt              = true
+    dynamodb_table       = "terraform-lock-table"
   }
 }
 
@@ -29,7 +29,7 @@ provider "aws" {
 }
 
 locals {
-  prefix = "${var.prefix}-${terraform.workspace}"
+  prefix         = "${var.prefix}-${terraform.workspace}"
   cloudfront_url = "https://${aws_cloudfront_distribution.sources_cdn.domain_name}"
   s3_bucket_name = var.s3_bucket_name
 }
