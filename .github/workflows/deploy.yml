@@ -45,7 +45,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id: ${{ vars.AWS_USER }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
@@ -65,7 +65,7 @@ jobs:
 
       - name: Push to ECR
         run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ vars.AWS_ACCESS_KEY_ID  }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           docker build --compress -t ${{ vars.ECR_REPO_HASH_LAMBDA }}:$GITHUB_SHA process/
           docker push ${{ vars.ECR_REPO_HASH_LAMBDA }}:$GITHUB_SHA
 

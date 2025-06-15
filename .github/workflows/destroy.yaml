@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Terraform destroy
         env:
-          AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
+          AWS_ACCESS_KEY_ID: ${{ vars.AWS_USER }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           export TF_WORKSPACE=${{ github.event.inputs.environment }}
