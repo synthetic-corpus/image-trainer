@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Retro 1998 Website</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body bgcolor="#CCCCFF">
+    <table width="750" align="center" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td bgcolor="#000080">
+                <font color="white" face="Arial, Helvetica" size="6">
+                    <b>&nbsp;My Awesome 1998 Website</b>
+                </font>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#FFFFFF" align="center">
+                <br>
+                <div id="image-container">
+                    <!-- Image URL is interpolated directly from Flask -->
+                    <img src="{{ image_url }}" alt="Main Image" width="400" height="300" border="2">
+                </div>
+                <br><br>
+                
+                <!-- Display message if gender was selected -->
+                {% if message %}
+                <div class="message-box">
+                    <font color="red" face="Arial, Helvetica" size="4">
+                        <b>{{ message }}</b>
+                    </font>
+                </div>
+                <br>
+                {% endif %}
+                
+                <!-- Form for gender selection -->
+                <form method="POST" action="{{ url_for('select_gender') }}">
+                    <input type="hidden" name="current_image_url" value="{{ image_url }}">
+                    <table cellpadding="5" cellspacing="10">
+                        <tr>
+                            <td>
+                                <button type="submit" name="gender" value="male" class="retro-button">MALE</button>
+                            </td>
+                            <td>
+                                <button type="submit" name="gender" value="female" class="retro-button">FEMALE</button>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+                
+                <br>
+                
+                <!-- Show current selection if any -->
+                {% if selected_gender %}
+                <div class="selection-display">
+                    <font face="Arial, Helvetica" size="3">
+                        Current selection: <b>{{ selected_gender.upper() }}</b>
+                    </font>
+                </div>
+                <br>
+                {% endif %}
+                
+                <marquee scrollamount="3" behavior="alternate">
+                    <font color="red" face="Impact, Arial, Helvetica">Welcome to my awesome website! Best viewed in Netscape Navigator 4.0 or Internet Explorer 4.0</font>
+                </marquee>
+                <br>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="#000080" align="center">
+                <font color="white" face="Arial, Helvetica" size="2">
+                    &copy; 1998 My Awesome Website. All Rights Reserved.
+                </font>
+            </td>
+        </tr>
+    </table>
+
+    <script>
+        // Function to fetch image URL from API
+        // function fetchImageUrl() {
+        //     fetch('/api/image')
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             document.getElementById('main-image').src = data.image_url;
+        //         })
+        //         .catch(error => {
+        //             console.error('Error fetching image URL:', error);
+        //         });
+        // }
+
+        // Function to handle gender selection
+        // function selectGender(gender) {
+        //     alert("You selected: " + gender);
+        //     // In future versions, this could send the selection to the server
+        // }
+
+        // Load the image when the page loads
+        // window.onload = fetchImageUrl;
+    </script>
+</body>
+</html>

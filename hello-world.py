@@ -5,7 +5,7 @@
 
 
 def hello():
-    """ Just says hello world """
+    """Just says hello world."""
     return 'hello world'
 
 

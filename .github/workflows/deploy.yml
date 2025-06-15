@@ -1,0 +1,89 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches:
+      - main
+      - prod
+    paths:
+      - 'infra/**'
+
+env:
+  TF_VERSION: "1.6.2"
+  AWS_REGION: "us-west-2"
+
+jobs:
+  lint:
+    name: Lint Infrastructure
+    uses: ./.github/workflows/lint.yml
+    secrets:
+      DOCKERHUB_USER: ${{ vars.DOCKERHUB_USER }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  deploy:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    needs: [lint]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Determine Workspace
+        run: |
+          if [ "${{ github.ref_name }}" = "prod" ]; then
+            echo "prod" > .workspace
+          else
+            echo "staging" > .workspace
+          fi
+          echo "Using workspace: $(cat .workspace)"
+
+      - name: Push to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          docker build --compress -t ${{ vars.ECR_REPO_HASH_LAMBDA }}:$GITHUB_SHA process/
+          docker push ${{ vars.ECR_REPO_HASH_LAMBDA }}:$GITHUB_SHA
+
+      - name: Terraform Init
+        run: |
+          cd infra/deploy
+          terraform init
+
+      - name: Terraform Validate
+        run: |
+          cd infra/deploy
+          terraform validate
+
+      - name: Terraform Plan
+        env:
+          TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
+          TF_VAR_ecr_lambda_md5_image: ${{ vars.ECR_HASH_LAMBDA_IMAGE }}:$GITHUB_SHA
+        run: |
+          cd infra/deploy
+          WORKSPACE=$(cat ../../.workspace)
+          terraform workspace select $WORKSPACE || terraform workspace new $WORKSPACE
+          terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
+          TF_VAR_ecr_lambda_md5_image: ${{ vars.ECR_HASH_LAMBDA_IMAGE }}:$GITHUB_SHA
+
+        run: |
+          cd infra/deploy
+          WORKSPACE=$(cat ../../.workspace)
+          terraform workspace select $WORKSPACE || terraform workspace new $WORKSPACE
+          terraform apply -auto-approve tfplan 
