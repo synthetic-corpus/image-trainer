@@ -308,49 +308,6 @@ resource "aws_iam_user_policy_attachment" "elb" {
 }
 
 #########################
-# Policy for EFS access #
-#########################
-
-data "aws_iam_policy_document" "efs" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "elasticfilesystem:DescribeFileSystems",
-      "elasticfilesystem:DescribeAccessPoints",
-      "elasticfilesystem:DeleteFileSystem",
-      "elasticfilesystem:DeleteAccessPoint",
-      "elasticfilesystem:DescribeMountTargets",
-      "elasticfilesystem:DeleteMountTarget",
-      "elasticfilesystem:DescribeMountTargetSecurityGroups",
-      "elasticfilesystem:DescribeLifecycleConfiguration",
-      "elasticfilesystem:CreateMountTarget",
-      "elasticfilesystem:CreateAccessPoint",
-      "elasticfilesystem:CreateFileSystem",
-      "elasticfilesystem:TagResource",
-      "elasticfilesystem:ModifyMountTargetSecurityGroups",
-      "ec2:DescribeNetworkInterfaceAttribute", # ec2 permissions are needed to get the mount to work.
-      "ec2:CreateNetworkInterface",
-      "ec2:DescribeNetworkInterfaces",
-      "ec2:DeleteNetworkInterface",
-      "ec2:DescribeVpcs",
-      "ec2:DescribeSubnets"
-    ]
-    resources = ["*"]
-  }
-}
-
-resource "aws_iam_policy" "efs" {
-  name        = "${aws_iam_user.cd.name}-efs"
-  description = "Allow user to manage EFS resources."
-  policy      = data.aws_iam_policy_document.efs.json
-}
-
-resource "aws_iam_user_policy_attachment" "efs" {
-  user       = aws_iam_user.cd.name
-  policy_arn = aws_iam_policy.efs.arn
-}
-
-#########################
 # Policy for Lambda access #
 #########################
 
@@ -466,25 +423,10 @@ resource "aws_iam_user_policy_attachment" "ecr" {
   policy_arn = aws_iam_policy.ecr.arn
 }
 
-############################################
-# Policies related to the source s3 Bucket #
-############################################
-
-data "aws_iam_policy_document" "source_s3_bucket" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "s3:GetBucketPolicy",
-      "s3:PutBucketPolicy",
-      "s3:DeleteBucketPolicy"
-    ]
-    resources = ["${local.s3_bucket_arn}"]
-  }
-}
-
 #####################################
-# Policy for CloudFront CDN access #
-####################################
+# Policy for CloudFront CDN access  #
+# Including s3 bucket access        #
+#####################################
 
 data "aws_iam_policy_document" "cloudfront" {
   statement {
@@ -532,6 +474,15 @@ data "aws_iam_policy_document" "cloudfront" {
       "cloudfront:ListStreamingDistributions"
     ]
     resources = ["*"]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketPolicy",
+      "s3:PutBucketPolicy",
+      "s3:DeleteBucketPolicy"
+    ]
+    resources = ["${local.s3_bucket_arn}"]
   }
 }
 
