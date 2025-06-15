@@ -117,7 +117,3 @@ variable "ecr_app_image" {
 variable "ecr_lambda_md5_image" {
     description = "Path to the ECR Repo for a lambda."
 }
-
-variable "django_secret_key" {
-  description = "Django secret key (from git hub actions)"
-}

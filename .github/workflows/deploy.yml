@@ -1,0 +1,93 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - prod
+    paths:
+      - 'infra/**'
+  pull_request:
+    branches:
+      - main
+      - prod
+    paths:
+      - 'infra/**'
+
+env:
+  TF_VERSION: "1.6.2"
+  AWS_REGION: "us-west-2"
+
+jobs:
+  deploy:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    needs: [lint]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Determine Workspace
+        run: |
+          if [ "${{ github.ref_name }}" = "prod" ]; then
+            echo "prod" > .workspace
+          else
+            echo "staging" > .workspace
+          fi
+          echo "Using workspace: $(cat .workspace)"
+
+      - name: Terraform Format Check
+        run: |
+          cd infra/deploy
+          terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: |
+          cd infra/deploy
+          terraform init
+
+      - name: Terraform Validate
+        run: |
+          cd infra/deploy
+          terraform validate
+
+      - name: Terraform Plan
+        env:
+          TF_VAR_s3_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
+          TF_VAR_ecr_proxy_image: ${{ secrets.ECR_PROXY_IMAGE }}
+          TF_VAR_ecr_app_image: ${{ secrets.ECR_APP_IMAGE }}
+          TF_VAR_ecr_lambda_md5_image: ${{ secrets.ECR_LAMBDA_MD5_IMAGE }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+        run: |
+          cd infra/deploy
+          WORKSPACE=$(cat ../../.workspace)
+          terraform workspace select $WORKSPACE || terraform workspace new $WORKSPACE
+          terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          TF_VAR_s3_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
+          TF_VAR_ecr_proxy_image: ${{ secrets.ECR_PROXY_IMAGE }}
+          TF_VAR_ecr_app_image: ${{ secrets.ECR_APP_IMAGE }}
+          TF_VAR_ecr_lambda_md5_image: ${{ secrets.ECR_LAMBDA_MD5_IMAGE }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+        run: |
+          cd infra/deploy
+          WORKSPACE=$(cat ../../.workspace)
+          terraform workspace select $WORKSPACE || terraform workspace new $WORKSPACE
+          terraform apply -auto-approve tfplan 
