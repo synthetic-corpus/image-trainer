@@ -104,14 +104,17 @@ variable "db_username" {
 
 variable "db_password" {
   description = "Password for the terraform database."
+  default     = "placeholder-password"
 }
 
 variable "ecr_proxy_image" {
   description = "Path to the ECR repo with the proxy image"
+  default     = "placeholder-proxy-image"
 }
 
 variable "ecr_app_image" {
   description = "Path to the ECR repo with the image image"
+  default     = "placeholder-app-image"
 }
 
 variable "ecr_lambda_md5_image" {
