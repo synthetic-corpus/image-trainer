@@ -1,6 +1,7 @@
 name: PEP 8 Compliance Check
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - '**'  # Run on pushes to any branch
