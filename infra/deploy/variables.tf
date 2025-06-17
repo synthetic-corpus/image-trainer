@@ -48,6 +48,7 @@ variable "private_subnet_tag" {
 variable "s3_bucket_name" {
   description = "Name of the existing S3 bucket to reference"
   type        = string
+  default     = "image-trainer-sources"  # Default for local development
 }
 
 # Lambda configuration variables
