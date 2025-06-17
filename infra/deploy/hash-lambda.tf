@@ -77,11 +77,13 @@ data "aws_iam_policy_document" "lambda_ecr_policy" {
     actions = [
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
-      "ecr:BatchCheckLayerAvailability"
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:DescribeRepositories",
+      "ecr:DescribeImages"
     ]
     resources = [data.aws_ecr_repository.hash_lambda_repo.arn]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
@@ -151,7 +153,8 @@ resource "aws_lambda_function" "processor" {
     aws_cloudwatch_log_group.lambda_logs,
     aws_iam_role_policy_attachment.lambda_s3_attachment,
     aws_iam_role_policy_attachment.lambda_logs_attachment,
-    aws_iam_role_policy_attachment.lambda_ecr_attachment
+    aws_iam_role_policy_attachment.lambda_ecr_attachment,
+    aws_ecr_repository_policy.hash_lambda_policy
   ]
 
   tags = {
