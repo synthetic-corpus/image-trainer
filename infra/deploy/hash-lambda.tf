@@ -100,7 +100,7 @@ resource "aws_lambda_function" "processor" {
   function_name = "${var.prefix}-lambda-${var.environment}"
   role          = aws_iam_role.lambda_role.arn
   package_type  = "Image"
-  image_uri     = "${var.ecr_lambda_md5_image}:${var.lambda_image_tag}"
+  image_uri     = var.ecr_lambda_md5_image
 
   timeout     = var.lambda_timeout
   memory_size = var.lambda_memory_size
