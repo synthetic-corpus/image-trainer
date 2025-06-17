@@ -404,7 +404,9 @@ data "aws_iam_policy_document" "ecr" {
       "ecr:InitiateLayerUpload",
       "ecr:UploadLayerPart",
       "ecr:CompleteLayerUpload",
-      "ecr:PutImage"
+      "ecr:PutImage",
+      "ecr:DescribeRepositories",
+      "ecr:DescribeImages"
     ]
     resources = [
       "arn:aws:ecr:*:*:repository/web-app",

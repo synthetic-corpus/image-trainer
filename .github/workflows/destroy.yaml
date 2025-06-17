@@ -21,6 +21,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ vars.AWS_USER }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
         run: |
           export TF_WORKSPACE=${{ github.event.inputs.environment }}
           cd infra/
