@@ -16,8 +16,6 @@ data "aws_iam_policy_document" "hash_lambda_ecr_policy" {
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer"
     ]
-
-    resources = [data.aws_ecr_repository.hash_lambda_repo.arn]
   }
 }
 
