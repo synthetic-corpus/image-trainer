@@ -249,7 +249,7 @@ data "aws_iam_policy_document" "logs" {
       "logs:CreateLogGroup",
       "logs:TagResource",
       "logs:ListTagsLogGroup",
-      "logs:PutRetentionPolicy" 
+      "logs:PutRetentionPolicy"
     ]
     resources = ["*"]
   }
