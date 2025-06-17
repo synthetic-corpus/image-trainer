@@ -1,4 +1,4 @@
-name: Destory
+name: Destroy
 
 on:
   workflow_dispatch:
