@@ -7,9 +7,7 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 
   tags = {
-    Name    = "${var.prefix}-lambda-role-${var.environment}"
-    Project = var.project_name
-    Contact = var.contact
+    Name = "${var.prefix}-lambda-role-${var.environment}"
   }
 }
 
@@ -47,9 +45,7 @@ resource "aws_iam_policy" "lambda_s3_policy" {
   policy      = data.aws_iam_policy_document.lambda_s3_policy.json
 
   tags = {
-    Name    = "${var.prefix}-lambda-s3-policy-${var.environment}"
-    Project = var.project_name
-    Contact = var.contact
+    Name = "${var.prefix}-lambda-s3-policy-${var.environment}"
   }
 }
 
@@ -71,9 +67,7 @@ resource "aws_iam_policy" "lambda_logs_policy" {
   policy      = data.aws_iam_policy_document.lambda_logs_policy.json
 
   tags = {
-    Name    = "${var.prefix}-lambda-logs-policy-${var.environment}"
-    Project = var.project_name
-    Contact = var.contact
+    Name = "${var.prefix}-lambda-logs-policy-${var.environment}"
   }
 }
 
@@ -95,9 +89,7 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   retention_in_days = var.lambda_log_retention_days
 
   tags = {
-    Name    = "${var.prefix}-lambda-logs-${var.environment}"
-    Project = var.project_name
-    Contact = var.contact
+    Name = "${var.prefix}-lambda-logs-${var.environment}"
   }
 }
 
@@ -127,9 +119,7 @@ resource "aws_lambda_function" "processor" {
   ]
 
   tags = {
-    Name    = "${var.prefix}-lambda-${var.environment}"
-    Project = var.project_name
-    Contact = var.contact
+    Name = "${var.prefix}-lambda-${var.environment}"
   }
 }
 
