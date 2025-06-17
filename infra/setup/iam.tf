@@ -27,8 +27,8 @@ data "aws_iam_policy_document" "tf_backend_document" {
     effect  = "Allow"
     actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
     resources = [
-      "arn:aws:s3:::${var.tf_state_bucket}/${var.project}-deploy/*",
-      "arn:aws:s3:::${var.tf_state_bucket}/${var.project}-deploy-env/*"
+      "arn:aws:s3:::${var.tf_state_bucket}/${var.project}-deploy*",
+      "arn:aws:s3:::${var.tf_state_bucket}/${var.project}-deploy-env*"
     ]
   }
 
@@ -488,7 +488,8 @@ data "aws_iam_policy_document" "cloudfront" {
     actions = [
       "s3:GetBucketPolicy",
       "s3:PutBucketPolicy",
-      "s3:DeleteBucketPolicy"
+      "s3:DeleteBucketPolicy",
+      "s3:ListBucket"
     ]
     resources = ["${local.s3_bucket_arn}"]
   }
