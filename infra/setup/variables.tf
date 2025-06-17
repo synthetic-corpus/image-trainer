@@ -10,7 +10,7 @@ variable "tf_state_lock_table" {
 
 variable "project" {
   description = "This be the name of the project, yarg"
-  default     = "imagage-trainer-one"
+  default     = "image-trainer-one"
 }
 
 variable "contact" {
