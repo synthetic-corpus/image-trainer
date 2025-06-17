@@ -488,7 +488,8 @@ data "aws_iam_policy_document" "cloudfront" {
     actions = [
       "s3:GetBucketPolicy",
       "s3:PutBucketPolicy",
-      "s3:DeleteBucketPolicy"
+      "s3:DeleteBucketPolicy",
+      "s3:ListBucket"
     ]
     resources = ["${local.s3_bucket_arn}"]
   }
