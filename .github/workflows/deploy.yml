@@ -11,12 +11,6 @@ on:
         options:
           - main
           - prod
-  push:
-    branches:
-      - main
-      - prod
-    paths:
-      - 'infra/**'
 
 env:
   TF_VERSION: "1.6.2"
