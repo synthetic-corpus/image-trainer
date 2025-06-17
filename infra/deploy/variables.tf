@@ -120,4 +120,6 @@ variable "ecr_app_image" {
 
 variable "ecr_lambda_md5_image" {
   description = "Path to the ECR Repo for a lambda."
+  type        = string
+  default     = "123456789012.dkr.ecr.us-west-2.amazonaws.com/hash-lambda:latest" # Default for local development
 }
