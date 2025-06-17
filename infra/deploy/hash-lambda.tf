@@ -71,6 +71,36 @@ resource "aws_iam_policy" "lambda_logs_policy" {
   }
 }
 
+data "aws_iam_policy_document" "lambda_ecr_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "ecr:BatchCheckLayerAvailability"
+    ]
+    resources = [data.aws_ecr_repository.hash_lambda_repo.arn]
+  }
+  
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:GetAuthorizationToken"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "lambda_ecr_policy" {
+  name        = "${var.prefix}-lambda-ecr-policy-${var.environment}"
+  description = "Policy for Lambda to pull images from ECR"
+  policy      = data.aws_iam_policy_document.lambda_ecr_policy.json
+
+  tags = {
+    Name = "${var.prefix}-lambda-ecr-policy-${var.environment}"
+  }
+}
+
 #######################################
 # Policy attachements for this Lambda #
 #######################################
@@ -82,6 +112,11 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_attachment" {
 resource "aws_iam_role_policy_attachment" "lambda_logs_attachment" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_logs_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_ecr_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_ecr_policy.arn
 }
 
 resource "aws_cloudwatch_log_group" "lambda_logs" {
@@ -115,7 +150,8 @@ resource "aws_lambda_function" "processor" {
   depends_on = [
     aws_cloudwatch_log_group.lambda_logs,
     aws_iam_role_policy_attachment.lambda_s3_attachment,
-    aws_iam_role_policy_attachment.lambda_logs_attachment
+    aws_iam_role_policy_attachment.lambda_logs_attachment,
+    aws_iam_role_policy_attachment.lambda_ecr_attachment
   ]
 
   tags = {

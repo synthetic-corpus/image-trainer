@@ -32,6 +32,7 @@ locals {
   prefix         = "${var.prefix}-${terraform.workspace}"
   cloudfront_url = "https://${aws_cloudfront_distribution.sources_cdn.domain_name}"
   s3_bucket_name = var.s3_bucket_name
+  ecr_lambda_md5_image = var.ecr_lambda_md5_image
 }
 
 data "aws_region" "current" {}
