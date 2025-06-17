@@ -219,7 +219,8 @@ data "aws_iam_policy_document" "iam" {
       "iam:TagPolicy",
       "iam:PassRole",
       "iam:UpdateAssumeRolePolicy",
-      "iam:UpdateRoleDescription"
+      "iam:UpdateRoleDescription",
+      "iam:UntagPolicy"
     ]
     resources = ["*"]
   }
