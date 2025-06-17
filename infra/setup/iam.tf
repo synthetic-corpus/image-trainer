@@ -47,7 +47,8 @@ data "aws_iam_policy_document" "tf_backend_document" {
     effect = "Allow"
     actions = [
       "s3:GetBucketNotification",
-      "s3:PutBucketNotification"
+      "s3:PutBucketNotification",
+      "s3:DeleteBucketNotification"
     ]
     resources = ["*"]
   }
@@ -406,7 +407,13 @@ data "aws_iam_policy_document" "ecr" {
       "ecr:CompleteLayerUpload",
       "ecr:PutImage",
       "ecr:DescribeRepositories",
-      "ecr:DescribeImages"
+      "ecr:DescribeImages",
+      "ecr:ListTagsForResource",
+      "ecr:ListImages",
+      "ecr:PutRegistryPolicy",
+      "ecr:SetRepositoryPolicy",
+      "ecr:DeleteRepositoryPolicy",
+      "ecr:TagResource"
     ]
     resources = [
       "arn:aws:ecr:*:*:repository/web-app",
