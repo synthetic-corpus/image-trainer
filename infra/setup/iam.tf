@@ -413,7 +413,8 @@ data "aws_iam_policy_document" "ecr" {
       "ecr:PutRegistryPolicy",
       "ecr:SetRepositoryPolicy",
       "ecr:DeleteRepositoryPolicy",
-      "ecr:TagResource"
+      "ecr:TagResource",
+      "ecr:GetRepositoryPolicy"
     ]
     resources = [
       "arn:aws:ecr:*:*:repository/web-app",
