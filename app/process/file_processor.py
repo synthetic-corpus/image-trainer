@@ -16,8 +16,14 @@ from botocore.exceptions import ClientError, NoCredentialsError, \
     ParamValidationError
 
 # Custom modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from modules import S3Access  # noqa: E402
+# Handle both local development and Lambda environments
+try:
+    """ When running from an image, import from the same level. """
+    from modules import S3Access
+except ImportError:
+    """ In a Local Enviornment must import from one level up. """
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from modules import S3Access
 
 
 # Configure CloudWatch logging
