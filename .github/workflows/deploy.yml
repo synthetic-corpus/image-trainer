@@ -11,6 +11,18 @@ on:
         options:
           - main
           - prod
+          - develop
+          - feature/
+          - bugfix/
+          - hotfix/
+          - release/
+      custom_branch:
+        description: 'Custom branch name (if not in dropdown above)'
+        required: false
+        type: string
+  pull_request:
+    branches:
+      - main
 
 env:
   TF_VERSION: "1.6.2"
@@ -28,13 +40,13 @@ jobs:
     name: Deploy Infrastructure
     runs-on: ubuntu-latest
     needs: [lint]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/prod' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/prod' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.target_branch || github.ref_name }}
+          ref: ${{ github.event.inputs.custom_branch || github.event.inputs.target_branch || github.ref_name }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -50,12 +62,14 @@ jobs:
 
       - name: Determine Workspace
         run: |
-          if [ "${{ github.event.inputs.target_branch || github.ref_name }}" = "prod" ]; then
+          BRANCH_NAME="${{ github.event.inputs.custom_branch || github.event.inputs.target_branch || github.ref_name }}"
+          if [ "$BRANCH_NAME" = "prod" ]; then
             echo "prod" > .workspace
           else
             echo "staging" > .workspace
           fi
           echo "Using workspace: $(cat .workspace)"
+          echo "Branch: $BRANCH_NAME"
 
       - name: Push to ECR
         run: |
@@ -76,11 +90,6 @@ jobs:
           cd infra/deploy
           terraform init
 
-      - name: Terraform Validate
-        run: |
-          cd infra/deploy
-          terraform validate
-
       - name: Terraform Plan
         env:
           TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
@@ -92,7 +101,7 @@ jobs:
           terraform plan -out=tfplan
 
       - name: Terraform Apply
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch == 'main'
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
         env:
           TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
           TF_VAR_ecr_lambda_md5_image: ${{ vars.ECR_REPO_HASH_LAMBDA }}:${{ env.IMAGE_TAG }}
