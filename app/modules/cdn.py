@@ -1,5 +1,5 @@
 import random
-from s3_access import S3Access
+from .s3_access import S3Access
 
 
 class CDN(S3Access):
