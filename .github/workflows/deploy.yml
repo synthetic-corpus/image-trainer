@@ -46,7 +46,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.custom_branch || github.event.inputs.target_branch || github.ref_name }}
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.event.inputs.custom_branch || github.event.inputs.target_branch || github.ref_name }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -62,7 +62,11 @@ jobs:
 
       - name: Determine Workspace
         run: |
-          BRANCH_NAME="${{ github.event.inputs.custom_branch || github.event.inputs.target_branch || github.ref_name }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+          else
+            BRANCH_NAME="${{ github.event.inputs.custom_branch || github.event.inputs.target_branch || github.ref_name }}"
+          fi
           if [ "$BRANCH_NAME" = "prod" ]; then
             echo "prod" > .workspace
           else
