@@ -7,15 +7,14 @@ RUN apk add --no-cache \
     curl \
     gettext
 
-# Create nginx user if it doesn't exist
-RUN addgroup -g 101 -S nginx && \
-    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx
-
 # Copy configuration templates
 COPY default.conf.tpl /etc/nginx/templates/default.conf.template
 COPY gunicorn_headers /etc/nginx/gunicorn_headers
 
-# Create necessary directories
+# Remove default nginx config to ensure our template is used
+RUN rm -f /etc/nginx/conf.d/default.conf
+
+# Create necessary directories and ensure proper permissions
 RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx && \
     chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx
 

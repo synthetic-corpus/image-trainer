@@ -2,7 +2,7 @@
 # Environment variables will be substituted at runtime
 
 upstream flask_app {
-    server ${FLASK_HOST:-localhost}:${FLASK_PORT:-5000};
+    server ${APP_HOST}:${APP_PORT};
 }
 
 # Rate limiting

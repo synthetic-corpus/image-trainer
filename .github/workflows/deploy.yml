@@ -60,16 +60,25 @@ jobs:
       - name: Push to ECR
         run: |
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-          cd app/process
           # Use GITHUB_SHA for automatic runs, timestamp for manual runs
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             IMAGE_TAG="manual-$(date +%Y%m%d-%H%M%S)"
           else
             IMAGE_TAG="$GITHUB_SHA"
           fi
+          # Build the hash lambda image
+          cd app/process
           docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_HASH_LAMBDA }}:$IMAGE_TAG ..
           docker push ${{ vars.ECR_REPO_HASH_LAMBDA }}:$IMAGE_TAG
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          # Build the web image
+          cd app/web
+          docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_WEB }}:$IMAGE_TAG ..
+          docker push ${{ vars.ECR_REPO_WEB }}:$IMAGE_TAG
+          # Build the reverse proxy image
+          cd app/proxy
+          docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_PROXY }}:$IMAGE_TAG ..
+          docker push ${{ vars.ECR_REPO_PROXY }}:$IMAGE_TAG
 
       - name: Terraform Init
         run: |
