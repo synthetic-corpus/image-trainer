@@ -11,6 +11,15 @@ on:
         options:
           - main
           - prod
+          - develop
+          - feature/
+          - bugfix/
+          - hotfix/
+          - release/
+      custom_branch:
+        description: 'Custom branch name (if not in dropdown above)'
+        required: false
+        type: string
 
 env:
   TF_VERSION: "1.6.2"
