@@ -1,5 +1,26 @@
 import os
+import sys
 from flask import Flask, render_template, request, redirect, url_for, jsonify
+from botocore.exceptions import ClientError, NoCredentialsError
+
+# Custom modules
+# Handle both local development and Lambda environments
+try:
+    # Try Lambda environment first (modules at same level)
+    from modules.s3_access import S3Access
+    print("Modules imported at Root Successfully")
+except ImportError:
+    # Fall back to local development (modules one level up)
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from modules.s3_access import S3Access
+
+try:
+    bucket_name = os.environ.get('S3_BUCKET_NAME')
+    s3_access = S3Access(bucket_name)
+    print("S3 access initialized successfully")
+except (ClientError, NoCredentialsError) as e:
+    print(f"Error initializing S3 access: {e}")
+    s3_access = None
 
 app = Flask(__name__)
 
