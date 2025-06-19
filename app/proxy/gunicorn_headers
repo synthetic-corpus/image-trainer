@@ -1,0 +1,42 @@
+# Gunicorn-specific headers for nginx proxy behind AWS ALB
+# These headers help with proper communication between nginx and gunicorn
+
+# Remove headers that might cause issues
+proxy_hide_header X-Powered-By;
+proxy_hide_header Server;
+
+# Set headers for proper proxy communication
+proxy_set_header Connection "";
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-Server $host;
+
+# Additional security headers
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header Host $http_host;
+
+# ALB-specific headers
+proxy_set_header X-AWS-ELB-Health-Check $http_x_aws_elb_health_check;
+proxy_set_header X-AWS-ELB-Id $http_x_aws_elb_id;
+proxy_set_header X-AWS-ELB-Instance-Id $http_x_aws_elb_instance_id;
+
+# WebSocket support (if needed)
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection "upgrade";
+
+# Buffer settings for better performance
+proxy_buffering on;
+proxy_buffer_size 4k;
+proxy_buffers 8 4k;
+proxy_busy_buffers_size 8k;
+
+# Cache settings
+proxy_cache_valid 200 1h;
+proxy_cache_valid 404 1m;
+proxy_cache_valid 500 502 503 504 0;
+
+# ALB-specific optimizations
+proxy_http_version 1.1;
+proxy_set_header Connection "";
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Forwarded-Port $server_port; 
