@@ -90,11 +90,11 @@ jobs:
           docker push ${{ vars.ECR_REPO_HASH_LAMBDA }}:$IMAGE_TAG
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
           # Build the web image
-          cd app/web
+          cd ../web
           docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_WEB }}:$IMAGE_TAG ..
           docker push ${{ vars.ECR_REPO_WEB }}:$IMAGE_TAG
           # Build the reverse proxy image
-          cd app/proxy
+          cd ../proxy
           docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_PROXY }}:$IMAGE_TAG ..
           docker push ${{ vars.ECR_REPO_PROXY }}:$IMAGE_TAG
 
