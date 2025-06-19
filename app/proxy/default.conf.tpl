@@ -49,13 +49,19 @@ server {
     # Health check endpoint for ALB
     location /health {
         access_log off;
-        return 200 "healthy\n";
+        proxy_pass http://${APP_HOST}:${APP_PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Port $server_port;
+        proxy_set_header X-Forwarded-Host $host;
         add_header Content-Type text/plain;
     }
 
     # Static files (CSS, JS, images)
     location /static/ {
-        proxy_pass http://flask_app;
+        proxy_pass http://${APP_HOST}:${APP_PORT};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -75,33 +81,7 @@ server {
     location / {
         limit_req zone=web burst=30 nodelay;
         
-        proxy_pass http://flask_app;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Port $server_port;
-        proxy_set_header X-Forwarded-Host $host;
-        
-        # ALB-specific headers
-        proxy_set_header X-AWS-ELB-Health-Check $http_x_aws_elb_health_check;
-        proxy_set_header X-AWS-ELB-Id $http_x_aws_elb_id;
-        proxy_set_header X-AWS-ELB-Instance-Id $http_x_aws_elb_instance_id;
-        
-        # Timeouts
-        proxy_connect_timeout 30s;
-        proxy_send_timeout 30s;
-        proxy_read_timeout 30s;
-        
-        # Include gunicorn headers
-        include /etc/nginx/gunicorn_headers;
-    }
-
-    # API endpoints (if you add any later)
-    location /api/ {
-        limit_req zone=api burst=20 nodelay;
-        
-        proxy_pass http://flask_app;
+        proxy_pass http://${APP_HOST}:${APP_PORT};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

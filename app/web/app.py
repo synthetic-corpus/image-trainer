@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 
 app = Flask(__name__)
 
@@ -49,6 +49,12 @@ def select_gender():
     }
 
     return redirect(url_for('index', gender=selection_data['gender']))
+
+
+@app.route('/health')
+def health():
+    container_name = os.environ.get('CONTAINER_NAME', 'web')
+    return jsonify({"message": f"{container_name} is up"}), 200
 
 
 if __name__ == '__main__':
