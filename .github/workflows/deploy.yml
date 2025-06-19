@@ -95,7 +95,7 @@ jobs:
           docker push ${{ vars.ECR_REPO_WEB }}:$IMAGE_TAG
           # Build the reverse proxy image
           cd ../proxy
-          docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_PROXY }}:$IMAGE_TAG ..
+          docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_PROXY }}:$IMAGE_TAG .
           docker push ${{ vars.ECR_REPO_PROXY }}:$IMAGE_TAG
 
       - name: Terraform Init
