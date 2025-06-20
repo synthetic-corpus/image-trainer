@@ -241,4 +241,4 @@ override.tf.json
 terraform.rc
 
 secrets.txt
-samples/
+samples/*
