@@ -123,3 +123,9 @@ variable "ecr_lambda_md5_image" {
   type        = string
   default     = "123456789012.dkr.ecr.us-west-2.amazonaws.com/hash-lambda:latest" # Default for local development
 }
+
+variable "domain_name" {
+  description = "Domain name for the application (e.g., image-trainer.magicalapis.net)"
+  type        = string
+  default     = "image-trainer.magicalapis.net"
+}
