@@ -17,11 +17,8 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 # Remove default nginx config to ensure our template is used
 RUN rm -f /etc/nginx/conf.d/default.conf
 
-# Create necessary directories and ensure proper permissions
-RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx /etc/nginx/conf.d && \
-    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx /etc/nginx/conf.d && \
-    chmod -R 755 /var/cache/nginx /var/run /var/log/nginx /etc/nginx/conf.d && \
-    chmod 755 /docker-entrypoint.sh
+# Set permissions for entrypoint script (this must be done in Dockerfile)
+RUN chmod 755 /docker-entrypoint.sh
 
 # Expose port 8000
 EXPOSE 8000
