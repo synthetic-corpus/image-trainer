@@ -78,6 +78,18 @@ data "aws_iam_policy_document" "ecs_access" {
     ]
     resources = ["arn:aws:logs:${var.aws_region}:*:log-group:/aws/ecs/${local.project_name}/*"]
   }
+
+  # ELB permissions for target group registration
+  statement {
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:DescribeTargetGroups",
+      "elasticloadbalancing:DescribeTargetHealth",
+      "elasticloadbalancing:RegisterTargets",
+      "elasticloadbalancing:DeregisterTargets"
+    ]
+    resources = ["*"]
+  }
 }
 
 # Attach the consolidated access policy to the task execution role
@@ -204,7 +216,7 @@ resource "aws_ecs_service" "web" {
   name                   = "${local.prefix}-web"
   cluster                = aws_ecs_cluster.main.name
   task_definition        = aws_ecs_task_definition.web.family
-  desired_count          = 1
+  desired_count          = 2
   launch_type            = "FARGATE"
   platform_version       = "1.4.0"
   enable_execute_command = true
@@ -223,5 +235,46 @@ resource "aws_ecs_service" "web" {
     target_group_arn = aws_alb_target_group.web_app.arn
     container_name   = "proxy"
     container_port   = 8000
+  }
+}
+
+# Application Auto Scaling for ECS Service
+resource "aws_appautoscaling_target" "ecs_target" {
+  max_capacity       = 5
+  min_capacity       = 2
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.web.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+# CPU-based scaling policy
+resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
+  name               = "${local.prefix}-cpu-autoscaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value = 70.0
+  }
+}
+
+# Memory-based scaling policy
+resource "aws_appautoscaling_policy" "ecs_memory_policy" {
+  name               = "${local.prefix}-memory-autoscaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+    target_value = 80.0
   }
 }
