@@ -138,7 +138,7 @@ resource "aws_ecs_task_definition" "web" {
         logConfiguration = {
           logDriver = "awslogs"
           options = {
-            awslogs-group         = "/aws/ecs/${local.project_name}/api"
+            awslogs-group         = "/aws/ecs/${local.project_name}/web"
             awslogs-region        = data.aws_region.current.name
             awslogs-stream-prefix = "api"
           }
@@ -277,4 +277,15 @@ resource "aws_appautoscaling_policy" "ecs_memory_policy" {
     }
     target_value = 80.0
   }
+}
+
+# CloudWatch Log Groups for ECS
+resource "aws_cloudwatch_log_group" "ecs_web" {
+  name              = "/aws/ecs/${local.project_name}/web"
+  retention_in_days = 14
+}
+
+resource "aws_cloudwatch_log_group" "ecs_proxy" {
+  name              = "/aws/ecs/${local.project_name}/proxy"
+  retention_in_days = 14
 }
