@@ -158,13 +158,6 @@ resource "aws_ecs_task_definition" "web" {
             value = "8000"
           }
         ]
-        mountPoints = [
-          {
-            readOnly      = true
-            containerPath = "/vol/static"
-            sourceVolume  = "static"
-          }
-        ]
         logConfiguration = {
           logDriver = "awslogs"
           options = {

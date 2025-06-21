@@ -548,11 +548,6 @@ data "aws_iam_policy_document" "route53_acm_read" {
     resources = [
       "arn:aws:route53:::hostedzone/*"
     ]
-    condition {
-      test     = "StringEquals"
-      variable = "route53:ChangeResourceRecordSetsSingleRecord"
-      values   = ["*.magicalapis.net", "magicalapis.net"]
-    }
   }
 
   # ACM read permissions
