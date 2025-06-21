@@ -517,3 +517,64 @@ resource "aws_iam_user_policy_attachment" "logs" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.logs.arn
 }
+
+################################
+# Policy for Route53 and ACM   #
+# Read-only access for setup   #
+################################
+
+data "aws_iam_policy_document" "route53_acm_read" {
+  # Route53 read permissions (needed for discovery)
+  statement {
+    effect = "Allow"
+    actions = [
+      "route53:ListHostedZones",
+      "route53:GetHostedZone",
+      "route53:ListResourceRecordSets",
+      "route53:GetChange",
+      "route53:ListTagsForResource",
+      "route53:ListHostedZonesByName"
+    ]
+    resources = ["*"]
+  }
+
+  # Route53 write permissions (scoped to magicalapis.net hosted zone only)
+  statement {
+    effect = "Allow"
+    actions = [
+      "route53:ChangeResourceRecordSets",
+      "route53:GetChangeDetails"
+    ]
+    resources = [
+      "arn:aws:route53:::hostedzone/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "route53:ChangeResourceRecordSetsSingleRecord"
+      values   = ["*.magicalapis.net", "magicalapis.net"]
+    }
+  }
+
+  # ACM read permissions
+  statement {
+    effect = "Allow"
+    actions = [
+      "acm:ListCertificates",
+      "acm:DescribeCertificate",
+      "acm:ListTagsForCertificate",
+      "acm:GetCertificate"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "route53_acm_read" {
+  name        = "${aws_iam_user.cd.name}-route53-acm-read"
+  description = "Allow user to read Route53 hosted zones and ACM certificates, and create DNS records for setup validation."
+  policy      = data.aws_iam_policy_document.route53_acm_read.json
+}
+
+resource "aws_iam_user_policy_attachment" "route53_acm_read" {
+  user       = aws_iam_user.cd.name
+  policy_arn = aws_iam_policy.route53_acm_read.arn
+}

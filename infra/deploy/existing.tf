@@ -31,7 +31,7 @@ locals {
 # 2. Root domain certificate: "magicalapis.net" 
 # 3. Specific subdomain: "image-trainer.magicalapis.net"
 data "aws_acm_certificate" "existing" {
-  domain      = var.domain_name # This will be "image-trainer.magicalapis.net"
+  domain      = "*.${local.root_domain}" # Use wildcard certificate that covers all subdomains
   statuses    = ["ISSUED", "PENDING_VALIDATION"]
   most_recent = true
 
