@@ -11,14 +11,18 @@ RUN apk add --no-cache \
 COPY default.conf.tpl /etc/nginx/templates/default.conf.template
 COPY gunicorn_headers /etc/nginx/gunicorn_headers
 
-# Copy the entrypoint script
+# Copy the setup and entrypoint scripts
+COPY setup.sh /setup.sh
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 
 # Remove default nginx config to ensure our template is used
 RUN rm -f /etc/nginx/conf.d/default.conf
 
-# Set permissions for entrypoint script (this must be done in Dockerfile)
-RUN chmod 755 /docker-entrypoint.sh
+# Set permissions for scripts (this must be done in Dockerfile)
+RUN chmod 755 /setup.sh /docker-entrypoint.sh
+
+# Run setup as root to create directories and set permissions
+RUN /setup.sh
 
 # Expose port 8000
 EXPOSE 8000
