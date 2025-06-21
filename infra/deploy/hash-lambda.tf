@@ -57,7 +57,7 @@ data "aws_iam_policy_document" "lambda_logs_policy" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.prefix}-lambda-${var.environment}:*"]
+    resources = ["arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${local.project_name}/*"]
   }
 }
 
@@ -122,7 +122,7 @@ resource "aws_iam_role_policy_attachment" "lambda_ecr_attachment" {
 }
 
 resource "aws_cloudwatch_log_group" "lambda_logs" {
-  name              = "/aws/lambda/${var.prefix}-lambda-${var.environment}"
+  name              = "/aws/lambda/${local.project_name}/processor"
   retention_in_days = var.lambda_log_retention_days
 
   tags = {

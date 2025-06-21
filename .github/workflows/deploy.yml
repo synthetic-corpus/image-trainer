@@ -107,6 +107,9 @@ jobs:
         env:
           TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
           TF_VAR_ecr_lambda_md5_image: ${{ vars.ECR_REPO_HASH_LAMBDA }}:${{ env.IMAGE_TAG }}
+          TF_VAR_ecr_app_image: ${{ vars.ECR_REPO_WEB }}:${{ env.IMAGE_TAG }}
+          TF_VAR_ecr_proxy_image: ${{ vars.ECR_REPO_PROXY }}:${{ env.IMAGE_TAG }}
+          TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}
         run: |
           cd infra/deploy
           WORKSPACE=$(cat ../../.workspace)
@@ -118,7 +121,9 @@ jobs:
         env:
           TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
           TF_VAR_ecr_lambda_md5_image: ${{ vars.ECR_REPO_HASH_LAMBDA }}:${{ env.IMAGE_TAG }}
-
+          TF_VAR_ecr_app_image: ${{ vars.ECR_REPO_WEB }}:${{ env.IMAGE_TAG }}
+          TF_VAR_ecr_proxy_image: ${{ vars.ECR_REPO_PROXY }}:${{ env.IMAGE_TAG }}
+          TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}
         run: |
           cd infra/deploy
           WORKSPACE=$(cat ../../.workspace)
