@@ -2,12 +2,8 @@
 # Environment variables will be substituted at runtime
 
 upstream flask_app {
-    server ${APP_HOST}:${APP_PORT};
+    server ${APP_HOST}:${FLASK_PORT};
 }
-
-# Rate limiting
-limit_req_zone $binary_remote_addr zone=web:10m rate=20r/s;
-limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
 
 # Real IP configuration for ALB
 real_ip_header X-Forwarded-For;
@@ -49,25 +45,14 @@ server {
     # Health check endpoint for ALB
     location /health {
         access_log off;
-        proxy_pass http://${APP_HOST}:${APP_PORT};
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Port $server_port;
-        proxy_set_header X-Forwarded-Host $host;
+        proxy_pass http://${APP_HOST}:${FLASK_PORT};
+        include /etc/nginx/gunicorn_headers;
         add_header Content-Type text/plain;
     }
 
     # Static files (CSS, JS, images)
     location /static/ {
-        proxy_pass http://${APP_HOST}:${APP_PORT};
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Port $server_port;
-        proxy_set_header X-Forwarded-Host $host;
+        proxy_pass http://${APP_HOST}:${FLASK_PORT};
         
         # Cache static files
         expires 1y;
@@ -77,22 +62,9 @@ server {
         include /etc/nginx/gunicorn_headers;
     }
 
-    # Flask routes with rate limiting
+    # Flask routes
     location / {
-        limit_req zone=web burst=30 nodelay;
-        
-        proxy_pass http://${APP_HOST}:${APP_PORT};
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Port $server_port;
-        proxy_set_header X-Forwarded-Host $host;
-        
-        # ALB-specific headers
-        proxy_set_header X-AWS-ELB-Health-Check $http_x_aws_elb_health_check;
-        proxy_set_header X-AWS-ELB-Id $http_x_aws_elb_id;
-        proxy_set_header X-AWS-ELB-Instance-Id $http_x_aws_elb_instance_id;
+        proxy_pass http://${APP_HOST}:${FLASK_PORT};
         
         # Timeouts
         proxy_connect_timeout 30s;
