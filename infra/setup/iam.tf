@@ -135,6 +135,17 @@ data "aws_iam_policy_document" "infrastructure" {
       "ecs:CreateCluster",
       "ecs:UpdateCluster",
       "ecs:TagResource",
+      "ecs:ListServices",
+      "ecs:ListTasks",
+      "ecs:DescribeTasks",
+      "ecs:StopTask",
+      "ecs:RunTask",
+      "ecs:StartTask",
+      "ecs:UpdateServicePrimaryTaskSet",
+      "ecs:DescribeTaskSets",
+      "ecs:CreateTaskSet",
+      "ecs:DeleteTaskSet",
+      "ecs:UpdateTaskSet"
     ]
     resources = ["*"]
   }
@@ -160,7 +171,31 @@ data "aws_iam_policy_document" "infrastructure" {
       "elasticloadbalancing:AddTags",
       "elasticloadbalancing:DescribeTags",
       "elasticloadbalancing:ModifyListener",
-      "elasticloadbalancing:ModifyTargetGroup"
+      "elasticloadbalancing:ModifyTargetGroup",
+      "elasticloadbalancing:RegisterTargets",
+      "elasticloadbalancing:DeregisterTargets",
+      "elasticloadbalancing:DescribeTargetHealth"
+    ]
+    resources = ["*"]
+  }
+
+  # Application Auto Scaling permissions
+  statement {
+    effect = "Allow"
+    actions = [
+      "application-autoscaling:DescribeScalableTargets",
+      "application-autoscaling:DescribeScalingActivities",
+      "application-autoscaling:DescribeScalingPolicies",
+      "application-autoscaling:DescribeScheduledActions",
+      "application-autoscaling:PutScalingPolicy",
+      "application-autoscaling:PutScheduledAction",
+      "application-autoscaling:DeleteScalingPolicy",
+      "application-autoscaling:DeleteScheduledAction",
+      "application-autoscaling:RegisterScalableTarget",
+      "application-autoscaling:DeregisterScalableTarget",
+      "application-autoscaling:SetDesiredCapacity",
+      "application-autoscaling:DescribeScalingPolicies",
+      "application-autoscaling:DescribeScalingActivities"
     ]
     resources = ["*"]
   }
@@ -460,6 +495,7 @@ data "aws_iam_policy_document" "iam_management" {
       "iam:GetPolicy",
       "iam:CreateRole",
       "iam:CreatePolicy",
+      "iam:CreatePolicyVersion",
       "iam:AttachRolePolicy",
       "iam:TagRole",
       "iam:TagPolicy",
