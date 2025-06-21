@@ -150,56 +150,6 @@ data "aws_iam_policy_document" "infrastructure" {
     resources = ["*"]
   }
 
-  # ELB/ALB permissions
-  statement {
-    effect = "Allow"
-    actions = [
-      "elasticloadbalancing:DeleteLoadBalancer",
-      "elasticloadbalancing:DeleteTargetGroup",
-      "elasticloadbalancing:DeleteListener",
-      "elasticloadbalancing:DescribeListeners",
-      "elasticloadbalancing:DescribeLoadBalancerAttributes",
-      "elasticloadbalancing:DescribeTargetGroups",
-      "elasticloadbalancing:DescribeTargetGroupAttributes",
-      "elasticloadbalancing:DescribeLoadBalancers",
-      "elasticloadbalancing:CreateListener",
-      "elasticloadbalancing:SetSecurityGroups",
-      "elasticloadbalancing:ModifyLoadBalancerAttributes",
-      "elasticloadbalancing:CreateLoadBalancer",
-      "elasticloadbalancing:ModifyTargetGroupAttributes",
-      "elasticloadbalancing:CreateTargetGroup",
-      "elasticloadbalancing:AddTags",
-      "elasticloadbalancing:DescribeTags",
-      "elasticloadbalancing:ModifyListener",
-      "elasticloadbalancing:ModifyTargetGroup",
-      "elasticloadbalancing:RegisterTargets",
-      "elasticloadbalancing:DeregisterTargets",
-      "elasticloadbalancing:DescribeTargetHealth"
-    ]
-    resources = ["*"]
-  }
-
-  # Application Auto Scaling permissions
-  statement {
-    effect = "Allow"
-    actions = [
-      "application-autoscaling:DescribeScalableTargets",
-      "application-autoscaling:DescribeScalingActivities",
-      "application-autoscaling:DescribeScalingPolicies",
-      "application-autoscaling:DescribeScheduledActions",
-      "application-autoscaling:PutScalingPolicy",
-      "application-autoscaling:PutScheduledAction",
-      "application-autoscaling:DeleteScalingPolicy",
-      "application-autoscaling:DeleteScheduledAction",
-      "application-autoscaling:RegisterScalableTarget",
-      "application-autoscaling:DeregisterScalableTarget",
-      "application-autoscaling:SetDesiredCapacity",
-      "application-autoscaling:DescribeScalingPolicies",
-      "application-autoscaling:DescribeScalingActivities"
-    ]
-    resources = ["*"]
-  }
-
   # Lambda permissions
   statement {
     effect = "Allow"
@@ -314,6 +264,134 @@ resource "aws_iam_policy" "infrastructure" {
 resource "aws_iam_user_policy_attachment" "infrastructure" {
   user       = aws_iam_user.cd.name
   policy_arn = aws_iam_policy.infrastructure.arn
+}
+
+#########################
+# ALB/Load Balancer Policy #
+#########################
+
+data "aws_iam_policy_document" "alb" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:DeleteLoadBalancer",
+      "elasticloadbalancing:DeleteTargetGroup",
+      "elasticloadbalancing:DeleteListener",
+      "elasticloadbalancing:DescribeListeners",
+      "elasticloadbalancing:DescribeLoadBalancerAttributes",
+      "elasticloadbalancing:DescribeTargetGroups",
+      "elasticloadbalancing:DescribeTargetGroupAttributes",
+      "elasticloadbalancing:DescribeLoadBalancers",
+      "elasticloadbalancing:CreateListener",
+      "elasticloadbalancing:SetSecurityGroups",
+      "elasticloadbalancing:ModifyLoadBalancerAttributes",
+      "elasticloadbalancing:CreateLoadBalancer",
+      "elasticloadbalancing:ModifyTargetGroupAttributes",
+      "elasticloadbalancing:CreateTargetGroup",
+      "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:DescribeTags",
+      "elasticloadbalancing:ModifyListener",
+      "elasticloadbalancing:ModifyTargetGroup",
+      "elasticloadbalancing:RegisterTargets",
+      "elasticloadbalancing:DeregisterTargets",
+      "elasticloadbalancing:DescribeTargetHealth"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "alb" {
+  name        = "${aws_iam_user.cd.name}-alb"
+  description = "Allow user to manage Application Load Balancers and Target Groups."
+  policy      = data.aws_iam_policy_document.alb.json
+}
+
+resource "aws_iam_user_policy_attachment" "alb" {
+  user       = aws_iam_user.cd.name
+  policy_arn = aws_iam_policy.alb.arn
+}
+
+#########################
+# Auto Scaling Policy #
+#########################
+
+data "aws_iam_policy_document" "autoscaling" {
+  # Application Auto Scaling permissions
+  statement {
+    effect = "Allow"
+    actions = [
+      "application-autoscaling:DescribeScalableTargets",
+      "application-autoscaling:DescribeScalingActivities",
+      "application-autoscaling:DescribeScalingPolicies",
+      "application-autoscaling:DescribeScheduledActions",
+      "application-autoscaling:PutScalingPolicy",
+      "application-autoscaling:PutScheduledAction",
+      "application-autoscaling:DeleteScalingPolicy",
+      "application-autoscaling:DeleteScheduledAction",
+      "application-autoscaling:RegisterScalableTarget",
+      "application-autoscaling:DeregisterScalableTarget",
+      "application-autoscaling:SetDesiredCapacity",
+      "application-autoscaling:DescribeScalingPolicies",
+      "application-autoscaling:DescribeScalingActivities",
+      "application-autoscaling:TagResource",
+      "application-autoscaling:ListTagsForResource",
+      "application-autoscaling:UntagResource"
+    ]
+    resources = ["*"]
+  }
+
+  # Auto Scaling Group permissions
+  statement {
+    effect = "Allow"
+    actions = [
+      "autoscaling:CreateAutoScalingGroup",
+      "autoscaling:DeleteAutoScalingGroup",
+      "autoscaling:DescribeAutoScalingGroups",
+      "autoscaling:DescribeAutoScalingInstances",
+      "autoscaling:DescribeLaunchConfigurations",
+      "autoscaling:DescribeScalingActivities",
+      "autoscaling:DescribeScalingProcessTypes",
+      "autoscaling:DescribeScheduledActions",
+      "autoscaling:DescribeTags",
+      "autoscaling:DescribeTerminationPolicyTypes",
+      "autoscaling:UpdateAutoScalingGroup",
+      "autoscaling:SetDesiredCapacity",
+      "autoscaling:TerminateInstanceInAutoScalingGroup",
+      "autoscaling:CreateLaunchConfiguration",
+      "autoscaling:DeleteLaunchConfiguration",
+      "autoscaling:CreateOrUpdateTags",
+      "autoscaling:DeleteTags",
+      "autoscaling:AttachInstances",
+      "autoscaling:DetachInstances",
+      "autoscaling:AttachLoadBalancers",
+      "autoscaling:DetachLoadBalancers",
+      "autoscaling:AttachLoadBalancerTargetGroups",
+      "autoscaling:DetachLoadBalancerTargetGroups",
+      "autoscaling:EnterStandby",
+      "autoscaling:ExitStandby",
+      "autoscaling:ResumeProcesses",
+      "autoscaling:SuspendProcesses",
+      "autoscaling:PutScheduledUpdateGroupAction",
+      "autoscaling:DeleteScheduledAction",
+      "autoscaling:PutLifecycleHook",
+      "autoscaling:DeleteLifecycleHook",
+      "autoscaling:DescribeLifecycleHooks",
+      "autoscaling:RecordLifecycleActionHeartbeat",
+      "autoscaling:CompleteLifecycleAction"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "autoscaling" {
+  name        = "${aws_iam_user.cd.name}-autoscaling"
+  description = "Allow user to manage Auto Scaling Groups and Application Auto Scaling."
+  policy      = data.aws_iam_policy_document.autoscaling.json
+}
+
+resource "aws_iam_user_policy_attachment" "autoscaling" {
+  user       = aws_iam_user.cd.name
+  policy_arn = aws_iam_policy.autoscaling.arn
 }
 
 ########################
