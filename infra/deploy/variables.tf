@@ -110,12 +110,12 @@ variable "db_password" {
 
 variable "ecr_proxy_image" {
   description = "Path to the ECR repo with the proxy image"
-  default     = "placeholder-proxy-image"
+  default     = "123456789012.dkr.ecr.us-west-2.amazonaws.com/proxy:latest"
 }
 
 variable "ecr_app_image" {
   description = "Path to the ECR repo with the image image"
-  default     = "placeholder-app-image"
+  default     = "123456789012.dkr.ecr.us-west-2.amazonaws.com/app:latest"
 }
 
 variable "ecr_lambda_md5_image" {
