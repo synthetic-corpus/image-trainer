@@ -129,6 +129,12 @@ resource "aws_ecs_task_definition" "web" {
         essential         = true
         memoryReservation = 256
         user              = "www-data"
+        portMappings = [
+          {
+            containerPort = 5000
+            hostPort      = 5000
+          }
+        ]
         environment = [
           {
             name  = "ALLOWED_HOSTS"
@@ -162,11 +168,11 @@ resource "aws_ecs_task_definition" "web" {
             value = "127.0.0.1"
           },
           {
-            name  = "PORT"
+            name  = "FLASK_PORT"
             value = "5000"
           },
           {
-            name  = "APP_PORT"
+            name  = "PROXY_PORT"
             value = "8000"
           }
         ]
