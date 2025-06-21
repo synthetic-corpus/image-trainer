@@ -1,8 +1,8 @@
 # Use Python 3.11 slim image as base
 FROM python:3.11-slim
 
-# Create www-data user with specific UID
-RUN useradd -m -u 626 www-data
+# Ensure www-data user exists with correct UID (modify if different)
+RUN usermod -u 626 www-data || useradd -m -u 626 www-data
 
 # Set working directory in container
 WORKDIR /app
