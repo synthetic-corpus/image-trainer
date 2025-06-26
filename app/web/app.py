@@ -59,10 +59,14 @@ def index():
 @app.route('/select-gender', methods=['POST'])
 def select_gender():
     gender = request.form.get('gender')
-    current_image_url = request.form.get('current_image_url', get_image_url())
+    current_image_url = request.form.get('current_image_url', None)
 
-    # Extract filename from the image URL
-    filename = extract_filename_from_url(current_image_url)
+    try:
+        filename = extract_filename_from_url(current_image_url)
+    except Exception as e:
+        print(f"Error extracting filename from URL: {e}. \
+              No data will b written!")
+        filename = None
 
     selection_data = {
         'gender': gender,
