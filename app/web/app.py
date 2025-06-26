@@ -7,30 +7,30 @@ from botocore.exceptions import ClientError, NoCredentialsError
 # Handle both local development and Lambda environments
 try:
     # Try Lambda environment first (modules at same level)
-    from modules.s3_access import S3Access
+    from modules.cloudfront_access import CloudFrontAccess
     print("Modules imported at Root Successfully")
 except ImportError:
     # Fall back to local development (modules one level up)
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    from modules.s3_access import S3Access
+    from modules.cloudfront_access import CloudFrontAccess
+    print("Modules imported at fallback Successfully")
 
 try:
     bucket_name = os.environ.get('S3_BUCKET_NAME')
-    s3_access = S3Access(bucket_name)
-    print("S3 access initialized successfully")
+    cloudfront_url = os.environ.get('CLOUDFRONT_URL')
+    cloudfront_access = CloudFrontAccess(cloudfront_url, bucket_name)
+    print("CloudFront access initialized successfully")
 except (ClientError, NoCredentialsError) as e:
-    print(f"Error initializing S3 access: {e}")
-    s3_access = None
+    print(f"Error initializing CloudFront access: {e}")
+    cloudfront_access = None
 
 app = Flask(__name__)
 
 
-def get_image_url():
+def get_image_url() -> str:
     """Function to get the external image URL from environment variable."""
-    return os.environ.get(
-        'IMAGE_URL',
-        'https://via.placeholder.com/400x300.jpg'
-    )
+    image_url = cloudfront_access.get_random_image_url()
+    return image_url
 
 
 def extract_filename_from_url(url):
