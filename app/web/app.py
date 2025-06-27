@@ -7,18 +7,18 @@ from botocore.exceptions import ClientError, NoCredentialsError
 # Handle both local development and Lambda environments
 try:
     # Try Lambda environment first (modules at same level)
-    from modules.cloudfront_access import CloudFrontAccess
+    from modules.cdn import CDN
     print("Modules imported at Root Successfully")
 except ImportError:
     # Fall back to local development (modules one level up)
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    from modules.cloudfront_access import CloudFrontAccess
+    from modules.cdn import CDN
     print("Modules imported at fallback Successfully")
 
 try:
     bucket_name = os.environ.get('S3_BUCKET_NAME')
     cloudfront_url = os.environ.get('CLOUDFRONT_URL')
-    cloudfront_access = CloudFrontAccess(cloudfront_url, bucket_name)
+    cloudfront_access = CDN(cloudfront_url, bucket_name)
     print("CloudFront access initialized successfully")
 except (ClientError, NoCredentialsError) as e:
     print(f"Error initializing CloudFront access: {e}")
