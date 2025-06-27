@@ -17,7 +17,7 @@ class CDN(S3Access):
         super().__init__(bucket_name)
         self.cdn_url = cdn_url.rstrip('/')  # Remove trailing slash
 
-    def get_image_url(self, filename):
+    def get_image_url(self, filename) -> str:
         """
         Generate the full CDN URL for an image in the sources folder.
 

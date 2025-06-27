@@ -139,6 +139,14 @@ resource "aws_ecs_task_definition" "web" {
           {
             name  = "ALLOWED_HOSTS"
             value = "*" # to be changed when Domain names declared
+          },
+          {
+            name  = "CLOUDFRONT_URL"
+            value = local.cloudfront_url
+          },
+          {
+            name  = "S3_BUCKET_NAME"
+            value = local.s3_bucket_name
           }
         ]
         logConfiguration = {
