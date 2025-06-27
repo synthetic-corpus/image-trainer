@@ -32,7 +32,7 @@ class CDN(S3Access):
         full_url = f"{self.cdn_url}/{filename}"
         return full_url
 
-    def get_random(self):
+    def get_random(self) -> tuple[str, str]:
         """
         Get a random image from the sources folder.
 

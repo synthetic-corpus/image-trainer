@@ -29,7 +29,7 @@ app = Flask(__name__)
 
 def get_image_url() -> str:
     """Function to get the external image URL from environment variable."""
-    image_url = cloudfront_access.get_random_image_url()
+    image_url = cloudfront_access.get_random()[0]
     return image_url
 
 
