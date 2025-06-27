@@ -65,13 +65,16 @@ def select_gender():
         filename = extract_filename_from_url(current_image_url)
     except Exception as e:
         print(f"Error extracting filename from URL: {e}. \
-              No data will b written!")
+              No data will be written!")
         filename = None
 
-    selection_data = {
-        'gender': gender,
-        'filename': filename
-    }
+    if filename is not None:
+        selection_data = {
+            'gender': gender,
+            'filename': filename
+        }
+        message = f'User selected {gender} for {filename}'
+        print(message)
 
     return redirect(url_for('index', gender=selection_data['gender']))
 
