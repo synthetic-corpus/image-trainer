@@ -18,7 +18,7 @@ except ImportError:
 try:
     bucket_name = os.environ.get('S3_BUCKET_NAME')
     cloudfront_url = os.environ.get('CLOUDFRONT_URL')
-    cloudfront_access = CDN(cloudfront_url, bucket_name)
+    cloudfront_access = CDN(bucket_name, cloudfront_url)
     print("CloudFront access initialized successfully")
 except (ClientError, NoCredentialsError) as e:
     print(f"Error initializing CloudFront access: {e}")
