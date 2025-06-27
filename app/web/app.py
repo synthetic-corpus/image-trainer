@@ -1,27 +1,32 @@
 import os
 import sys
+import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from botocore.exceptions import ClientError, NoCredentialsError
+
+# Configure logging for CloudWatch
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Custom modules
 # Handle both local development and Lambda environments
 try:
     # Try Lambda environment first (modules at same level)
     from modules.cdn import CDN
-    print("Modules imported at Root Successfully")
+    logger.info("Modules imported at Root Successfully")
 except ImportError:
     # Fall back to local development (modules one level up)
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     from modules.cdn import CDN
-    print("Modules imported at fallback Successfully")
+    logger.info("Modules imported at fallback Successfully")
 
 try:
     bucket_name = os.environ.get('S3_BUCKET_NAME')
     cloudfront_url = os.environ.get('CLOUDFRONT_URL')
     cloudfront_access = CDN(bucket_name, cloudfront_url)
-    print("CloudFront access initialized successfully")
+    logger.info("CloudFront access initialized successfully")
 except (ClientError, NoCredentialsError) as e:
-    print(f"Error initializing CloudFront access: {e}")
+    logger.error(f"Error initializing CloudFront access: {e}")
     cloudfront_access = None
 
 app = Flask(__name__)
@@ -64,7 +69,7 @@ def select_gender():
     try:
         filename = extract_filename_from_url(current_image_url)
     except Exception as e:
-        print(f"Error extracting filename from URL: {e}. \
+        logger.error(f"Error extracting filename from URL: {e}. \
               No data will be written!")
         filename = None
 
@@ -74,7 +79,7 @@ def select_gender():
             'filename': filename
         }
         message = f'User selected {gender} for {filename}'
-        print(message)
+        logger.info(message)
 
     return redirect(url_for('index', gender=selection_data['gender']))
 
