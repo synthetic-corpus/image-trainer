@@ -30,4 +30,14 @@ resource "aws_ecr_repository" "hash_lambda" {
   image_scanning_configuration {
     scan_on_push = false
   }
-} 
+}
+
+resource "aws_ecr_repository" "numpy_convert" {
+  name                 = "numpy-convert"
+  image_tag_mutability = "MUTABLE"
+  force_delete         = true
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+}
