@@ -454,7 +454,8 @@ data "aws_iam_policy_document" "ecr" {
     resources = [
       "arn:aws:ecr:*:*:repository/web-app",
       "arn:aws:ecr:*:*:repository/web-proxy",
-      "arn:aws:ecr:*:*:repository/hash-lambda"
+      "arn:aws:ecr:*:*:repository/hash-lambda",
+      "arn:aws:ecr:*:*:repository/numpy-convert"
     ]
   }
 

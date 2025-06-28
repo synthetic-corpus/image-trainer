@@ -89,6 +89,10 @@ jobs:
           docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_HASH_LAMBDA }}:$IMAGE_TAG ..
           docker push ${{ vars.ECR_REPO_HASH_LAMBDA }}:$IMAGE_TAG
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          # Build the numpy-convert lambda image
+          cd ../numpy-convert
+          docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_NUMPY_LAMBDA }}:$IMAGE_TAG ..
+          docker push ${{ vars.ECR_REPO_NUMPY_LAMBDA }}:$IMAGE_TAG
           # Build the web image
           cd ../web
           docker build --compress -f Dockerfile -t ${{ vars.ECR_REPO_WEB }}:$IMAGE_TAG ..
@@ -107,6 +111,7 @@ jobs:
         env:
           TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
           TF_VAR_ecr_lambda_md5_image: ${{ vars.ECR_REPO_HASH_LAMBDA }}:${{ env.IMAGE_TAG }}
+          TF_VAR_ecr_numpy_lambda_image: ${{ vars.ECR_REPO_NUMPY_LAMBDA }}:${{ env.IMAGE_TAG }}
           TF_VAR_ecr_app_image: ${{ vars.ECR_REPO_WEB }}:${{ env.IMAGE_TAG }}
           TF_VAR_ecr_proxy_image: ${{ vars.ECR_REPO_PROXY }}:${{ env.IMAGE_TAG }}
           TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}
@@ -121,6 +126,7 @@ jobs:
         env:
           TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
           TF_VAR_ecr_lambda_md5_image: ${{ vars.ECR_REPO_HASH_LAMBDA }}:${{ env.IMAGE_TAG }}
+          TF_VAR_ecr_numpy_lambda_image: ${{ vars.ECR_REPO_NUMPY_LAMBDA }}:${{ env.IMAGE_TAG }}
           TF_VAR_ecr_app_image: ${{ vars.ECR_REPO_WEB }}:${{ env.IMAGE_TAG }}
           TF_VAR_ecr_proxy_image: ${{ vars.ECR_REPO_PROXY }}:${{ env.IMAGE_TAG }}
           TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}

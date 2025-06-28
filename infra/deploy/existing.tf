@@ -20,6 +20,10 @@ data "aws_ecr_repository" "app_repo" {
   name = split("/", split(":", var.ecr_app_image)[0])[1]
 }
 
+data "aws_ecr_repository" "numpy_lambda_repo" {
+  name = split("/", split(":", var.ecr_numpy_lambda_image)[0])[1]
+}
+
 # Extract root domain from domain_name (e.g., "image-trainer.magicalapis.net" -> "magicalapis.net")
 locals {
   root_domain = join(".", slice(split(".", var.domain_name), length(split(".", var.domain_name)) - 2, length(split(".", var.domain_name))))
