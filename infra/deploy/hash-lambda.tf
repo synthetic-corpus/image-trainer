@@ -163,20 +163,8 @@ resource "aws_lambda_function" "processor" {
 }
 
 #######################################
-# S3 Event Triggering for the Lambda #
+# Lambda Permission for S3 Invocation #
 #######################################
-resource "aws_s3_bucket_notification" "lambda_notification" {
-  bucket = data.aws_s3_bucket.existing.id
-
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.processor.arn
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "upload/"
-  }
-
-  depends_on = [aws_lambda_permission.s3_permission]
-}
-
 resource "aws_lambda_permission" "s3_permission" {
   statement_id  = "AllowS3Invoke"
   action        = "lambda:InvokeFunction"
