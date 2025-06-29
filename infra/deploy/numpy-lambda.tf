@@ -41,7 +41,7 @@ data "aws_iam_policy_document" "numpy_lambda_s3_policy" {
       "s3:PutObject"
     ]
     resources = [
-      "${data.aws_s3_bucket.existing.arn}/monochrome/*"
+      "${data.aws_s3_bucket.existing.arn}/numpys/*"
     ]
   }
 }

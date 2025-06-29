@@ -4,6 +4,9 @@ FROM public.ecr.aws/lambda/python:3.11 as builder
 # Install build dependencies
 RUN yum install -y gcc gcc-c++ libjpeg-devel libpng-devel freetype-devel
 
+# Configure pip to prefer pre-built wheels
+RUN pip config set global.prefer-binary true
+
 # Copy requirements and install dependencies
 COPY numpy-convert/requirements.txt ${LAMBDA_TASK_ROOT}
 RUN pip install --no-cache-dir -r requirements.txt -t ${LAMBDA_TASK_ROOT}
