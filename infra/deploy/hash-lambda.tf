@@ -142,6 +142,11 @@ resource "aws_lambda_function" "processor" {
   timeout     = var.lambda_timeout
   memory_size = var.lambda_memory_size
 
+  vpc_config {
+    subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+    security_group_ids = [aws_security_group.hash_lambda_sg.id]
+  }
+
   environment {
     variables = {
       S3_BUCKET_NAME = var.s3_bucket_name
@@ -171,4 +176,23 @@ resource "aws_lambda_permission" "s3_permission" {
   function_name = aws_lambda_function.processor.function_name
   principal     = "s3.amazonaws.com"
   source_arn    = data.aws_s3_bucket.existing.arn
+}
+
+# Security group for Lambda to access RDS
+resource "aws_security_group" "hash_lambda_sg" {
+  name        = "${var.prefix}-hash-lambda-sg-${var.environment}"
+  description = "Security group for hash Lambda to access RDS"
+  vpc_id      = aws_vpc.main.id
+
+  # Allow all outbound traffic (needed for Lambda to reach RDS and other services)
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.prefix}-hash-lambda-sg-${var.environment}"
+  }
 }

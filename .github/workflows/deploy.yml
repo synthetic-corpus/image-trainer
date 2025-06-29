@@ -121,6 +121,18 @@ jobs:
           terraform workspace select $WORKSPACE || terraform workspace new $WORKSPACE
           terraform plan -out=tfplan
 
+      - name: Determine Database Approach
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
+        run: |
+          cd infra/deploy
+          chmod +x scripts/*.sh
+          cd scripts
+          eval "$(./determine-db-approach.sh)"
+          echo "USE_SNAPSHOT=${USE_SNAPSHOT}" >> $GITHUB_ENV
+          echo "SNAPSHOT_IDENTIFIER=${SNAPSHOT_IDENTIFIER}" >> $GITHUB_ENV
+          echo "DB_APPROACH=${DB_APPROACH}" >> $GITHUB_ENV
+          echo "Database approach: ${DB_APPROACH}"
+
       - name: Terraform Apply
         if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
         env:
@@ -130,8 +142,33 @@ jobs:
           TF_VAR_ecr_app_image: ${{ vars.ECR_REPO_WEB }}:${{ env.IMAGE_TAG }}
           TF_VAR_ecr_proxy_image: ${{ vars.ECR_REPO_PROXY }}:${{ env.IMAGE_TAG }}
           TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}
+          TF_VAR_db_password: ${{ vars.TF_VAR_DB_PASSWORD }}
+          TF_VAR_use_snapshot: ${{ env.USE_SNAPSHOT }}
+          TF_VAR_snapshot_identifier: ${{ env.SNAPSHOT_IDENTIFIER }}
         run: |
           cd infra/deploy
           WORKSPACE=$(cat ../../.workspace)
           terraform workspace select $WORKSPACE || terraform workspace new $WORKSPACE
-          terraform apply -auto-approve tfplan 
+          terraform apply -auto-approve tfplan
+
+      - name: Get Terraform Outputs
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
+        run: |
+          cd infra/deploy
+          WORKSPACE=$(cat ../../.workspace)
+          terraform workspace select $WORKSPACE
+          echo "DB_ENDPOINT=$(terraform output -raw db_endpoint)" >> $GITHUB_ENV
+          echo "DB_NAME=$(terraform output -raw db_name)" >> $GITHUB_ENV
+          echo "DB_USERNAME=$(terraform output -raw db_username)" >> $GITHUB_ENV
+
+      - name: Setup Database Tables
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
+        env:
+          DB_HOST: ${{ env.DB_ENDPOINT }}
+          DB_NAME: ${{ env.DB_NAME }}
+          DB_USER: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ vars.TF_VAR_DB_PASSWORD }}
+        run: |
+          cd infra/deploy
+          chmod +x scripts/*.sh
+          ./scripts/setup-database-tables.sh 
