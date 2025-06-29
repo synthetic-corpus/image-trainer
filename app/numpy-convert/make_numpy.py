@@ -85,20 +85,26 @@ def lambda_handler(event, context):
                                f"{event_bucket}")
                 continue
 
-            # Skip if not in sources folder (shouldn't happen due to filter,
-            # but safety check)
+            # DEFENSIVE: Ensure we only process files from sources folder
             if not object_key.startswith('sources/'):
                 logger.warning(f"Skipping file not in sources folder: "
                                f"{object_key}")
                 continue
 
-            # Skip the folder itself
+            # DEFENSIVE: Skip the folder itself
             if object_key.endswith('/'):
                 logger.info(f"Skipping folder: {object_key}")
                 continue
 
-            # Extract filename from key
+            # DEFENSIVE: Skip files have _bw suffix (prevent reprocessing)
             filename = object_key.split('/')[-1]
+            if '_bw.' in filename:
+                logger.info(f"Skipping already processed file: {object_key}")
+                processed_files.append({
+                    'original_file': object_key,
+                    'status': 'skipped_already_processed'
+                })
+                continue
 
             # Check if file has valid image extension
             if is_valid_image_file(filename):
@@ -241,6 +247,11 @@ def save_bw_image(file_object, original_key):
     try:
         logger.info(f"Saving black and white image for: {original_key}")
 
+        # DEFENSIVE: Ensure we never write back to sources folder
+        if original_key.startswith('sources/'):
+            logger.warning(f"Attempted to write to sources folder, \
+                           redirecting to monochrome: {original_key}")
+
         # Extract filename and extension
         filename = original_key.split('/')[-1]
         name_parts = filename.rsplit('.', 1)
@@ -257,6 +268,7 @@ def save_bw_image(file_object, original_key):
 
         logger.info(f"New file key will be: {new_key}")
 
+        # Save to S3 using S3Access
         success = s3_access.put_object(new_key, BytesIO(file_object))
         if not success:
             error_msg = f"Failed to save black and white image to {new_key}"
