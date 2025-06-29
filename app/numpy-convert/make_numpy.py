@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import sys
+import numpy as np
 from urllib.parse import unquote_plus
 from io import BytesIO
 from botocore.exceptions import ClientError, NoCredentialsError, \
@@ -32,6 +33,10 @@ logger.setLevel(logging.INFO)
 
 # Initialize S3 access
 s3_access = None
+
+# Get default target pixels from environment variable
+DEFAULT_TARGET_PIXELS = int(os.environ.get('DEFAULT_TARGET_PIXELS', '100'))
+TO_GRAYSCALE = bool(int(os.environ.get('TO_GRAYSCALE', '0')))
 
 
 def lambda_handler(event, context):
@@ -203,7 +208,66 @@ def get_file_object(file_key):
         return None
 
 
-def convert_to_black_white(file_object):
+def resize_and_pad_image(image_file_object,
+                         target_pixels_on_side=DEFAULT_TARGET_PIXELS,
+                         background_color=(0, 0, 0)):
+    """
+    Resizes an image to fit within a square of 'target_pixels_on_side'
+    while maintaining its aspect ratio, and adds black (or specified color)
+    padding to make it a perfect square.
+
+    Args:
+        image_file_object: A PIL.Image.Image object (already opened).
+        target_pixels_on_side (int): The desired length (in pixels) of each
+                                     side of the square output image.
+                                     Defaults to DEFAULT_TARGET_PIXELS
+                                     environment variable.
+        background_color (tuple): The RGB tuple (0-255) for the padding color.
+                                  Defaults to black (0, 0, 0).
+
+    Returns:
+        PIL.Image.Image: A new PIL Image object, resized and padded to
+        a square.
+        Returns None if there's an error.
+    """
+    try:
+        if not isinstance(image_file_object, Image.Image):
+            print("Error: Input is not a PIL.Image.Image object. (resize)")
+            return None
+
+        original_width, original_height = image_file_object.size
+        if original_width > original_height:
+            scale_factor = target_pixels_on_side / original_width
+        else:
+            scale_factor = target_pixels_on_side / original_height
+
+        new_width = int(original_width * scale_factor)
+        new_height = int(original_height * scale_factor)
+
+        # Resize the image while maintaining aspect ratio
+        resized_img = image_file_object.convert("RGB").resize(
+            (new_width, new_height),
+            Image.Resampling.LANCZOS)
+
+        # Create a new square image with the background color
+        padded_img = Image.new('RGB',
+                               (target_pixels_on_side, target_pixels_on_side),
+                               background_color)
+
+        paste_x = (target_pixels_on_side - new_width) // 2
+        paste_y = (target_pixels_on_side - new_height) // 2
+
+        # Paste the resized image onto the new background
+        padded_img.paste(resized_img, (paste_x, paste_y))
+
+        return padded_img
+
+    except Exception as e:
+        print(f"An error occurred during resizing and padding: {e}")
+        return None
+
+
+def convert_to_numpy(file_object, grayscale=TO_GRAYSCALE) -> np.ndarray:
     """
     Function 2: Convert image file object to black and white.
 
@@ -218,24 +282,30 @@ def convert_to_black_white(file_object):
 
         # Convert bytes to PIL Image
         image = Image.open(BytesIO(file_object))
+        image = resize_and_pad_image(image)
 
-        # Convert to grayscale (black and white)
-        bw_image = image.convert('L')
-        output_buffer = BytesIO()
-        bw_image.save(output_buffer, format=image.format or 'JPEG')
-        bw_bytes = output_buffer.getvalue()
+        if grayscale:
+            # Convert to grayscale (black and white)
+            image = image.convert('L')
+        else:
+            image = image.convert('RGB')
 
-        logger.info("Successfully converted image to black and white")
-        return bw_bytes
+        # Convert to numpy array
+        img_array = np.array(image)
+        img_array = img_array / 255.0
+        flattened_img = img_array.flatten()
+
+        logger.info("Successfully converted to a numpy array")
+        return flattened_img
 
     except Exception as e:
         logger.error(f"Error converting image to black and white: {str(e)}")
         return None
 
 
-def save_bw_image(file_object, original_key):
+def save_numpy_array(numpy_array: np.ndarray, original_key: str) -> None:
     """
-    Function 3: Save black and white image to S3 monochrome folder.
+    Function 3: Save black and white image to S3 numpys folder.
 
     Args:
         file_object (bytes): Black and white image as bytes
@@ -245,12 +315,12 @@ def save_bw_image(file_object, original_key):
         str: New S3 key of the saved file, or None if error
     """
     try:
-        logger.info(f"Saving black and white image for: {original_key}")
+        logger.info(f"Saving numpy array for: {original_key}")
 
         # DEFENSIVE: Ensure we never write back to sources folder
         if original_key.startswith('sources/'):
             logger.warning(f"Attempted to write to sources folder, \
-                           redirecting to monochrome: {original_key}")
+                           redirecting to numpys: {original_key}")
 
         # Extract filename and extension
         filename = original_key.split('/')[-1]
@@ -260,33 +330,32 @@ def save_bw_image(file_object, original_key):
             logger.error(f"Invalid filename format: {filename}")
             return None
 
-        base_name, extension = name_parts
+        md5_hash, extension = name_parts  # hash of the source file
 
-        # Create new filename with _bw suffix
-        new_filename = f"{base_name}_bw.{extension}"
-        new_key = f"monochrome/{new_filename}"
+        new_filename = f"{md5_hash}.npy"
+        new_key = f"numpys/{new_filename}"
 
         logger.info(f"New file key will be: {new_key}")
 
         # Save to S3 using S3Access
-        success = s3_access.put_object(new_key, BytesIO(file_object))
+        success = s3_access.put_object(new_key, BytesIO(numpy_array))
         if not success:
-            error_msg = f"Failed to save black and white image to {new_key}"
+            error_msg = f"Failed to save numpy array to {new_key}"
             logger.error(error_msg)
             return None
 
-        logger.info(f"Successfully saved black and white image: {new_key}")
+        logger.info(f"Successfully saved a numpy array  image: {new_key}")
         return new_key
 
     except Exception as e:
-        logger.error(f"Error saving black and white image: {str(e)}")
+        logger.error(f"Error saving numpy array for an image: {str(e)}")
         return None
 
 
 def process_image_file(file_key):
     """
     Process a valid image file: convert to black and white
-    and save to monochrome folder.
+    and save to numpys folder.
     """
     try:
         logger.info(f"Starting to process image file: {file_key}")
@@ -301,14 +370,14 @@ def process_image_file(file_key):
                 operation_name='GetObject'
             )
 
-        bw_file_object = convert_to_black_white(file_object)
-        if bw_file_object is None:
+        numpy_array = convert_to_numpy(file_object)
+        if numpy_array is None:
             error_msg = f"Failed to convert image to \
-                black and white: {file_key}"
+                numpy array: {file_key}"
             logger.error(error_msg)
             raise Exception(error_msg)
 
-        new_key = save_bw_image(bw_file_object, file_key)
+        new_key = save_numpy_array(numpy_array, file_key)
         if new_key is None:
             error_msg = f"Failed to save black and white image: {file_key}"
             logger.error(error_msg)
@@ -318,7 +387,7 @@ def process_image_file(file_key):
         return {
             'original_file': file_key,
             'new_file': new_key,
-            'status': 'converted_to_bw'
+            'status': 'converted_to_numpy_array'
         }
 
     except ClientError as e:
