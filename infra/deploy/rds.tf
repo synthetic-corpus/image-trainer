@@ -77,18 +77,18 @@ resource "aws_db_instance" "main" {
   # Engine configuration
   engine         = "postgres"
   engine_version = "15.4"
-  instance_class = "db.t3.micro"  # Smallest instance class
+  instance_class = "db.t3.micro" # Smallest instance class
 
   # Storage configuration
-  allocated_storage     = 20  # 20 GB (minimum for PostgreSQL)
-  max_allocated_storage = 25  # Maximum 25 GB as requested
+  allocated_storage     = 20 # 20 GB (minimum for PostgreSQL)
+  max_allocated_storage = 25 # Maximum 25 GB as requested
   storage_type          = "gp2"
   storage_encrypted     = true
 
   # Database configuration - conditional based on snapshot usage
-  db_name  = var.use_snapshot ? null : local.db_name  # Use snapshot's db name if restoring
-  username = var.use_snapshot ? null : local.db_username  # Use snapshot's username if restoring
-  password = var.use_snapshot ? null : local.db_password  # Use snapshot's password if restoring
+  db_name  = var.use_snapshot ? null : local.db_name     # Use snapshot's db name if restoring
+  username = var.use_snapshot ? null : local.db_username # Use snapshot's username if restoring
+  password = var.use_snapshot ? null : local.db_password # Use snapshot's password if restoring
   port     = 5432
 
   # Snapshot configuration (only used if use_snapshot is true)
@@ -98,23 +98,23 @@ resource "aws_db_instance" "main" {
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
   publicly_accessible    = false
-  multi_az               = false  # Single AZ for cost savings
+  multi_az               = false # Single AZ for cost savings
 
   # Backup and maintenance
-  backup_retention_period = 7
-  backup_window          = "03:00-04:00"
-  maintenance_window     = "sun:04:00-sun:05:00"
-  skip_final_snapshot    = false  # As requested
+  backup_retention_period   = 7
+  backup_window             = "03:00-04:00"
+  maintenance_window        = "sun:04:00-sun:05:00"
+  skip_final_snapshot       = false # As requested
   final_snapshot_identifier = "${local.prefix}-db-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
 
   # Performance insights
-  performance_insights_enabled = false  # Disabled for cost savings
+  performance_insights_enabled = false # Disabled for cost savings
 
   # Monitoring
-  monitoring_interval = 0  # Disabled for cost savings
+  monitoring_interval = 0 # Disabled for cost savings
 
   # Deletion protection
-  deletion_protection = false  # Set to true in production
+  deletion_protection = false # Set to true in production
 
   # Parameter group
   parameter_group_name = aws_db_parameter_group.main.name
