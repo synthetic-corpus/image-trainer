@@ -151,6 +151,11 @@ resource "aws_lambda_function" "processor" {
     variables = {
       S3_BUCKET_NAME = var.s3_bucket_name
       ENVIRONMENT    = var.environment
+      DB_HOST        = aws_db_instance.main.endpoint
+      DB_PORT        = "5432"
+      DB_NAME        = var.db_name
+      DB_USER        = var.db_username
+      DB_PASSWORD    = var.db_password
     }
   }
 
@@ -159,7 +164,8 @@ resource "aws_lambda_function" "processor" {
     aws_iam_role_policy_attachment.lambda_s3_attachment,
     aws_iam_role_policy_attachment.lambda_logs_attachment,
     aws_iam_role_policy_attachment.lambda_ecr_attachment,
-    aws_ecr_repository_policy.hash_lambda_policy
+    aws_ecr_repository_policy.hash_lambda_policy,
+    aws_db_instance.main
   ]
 
   tags = {

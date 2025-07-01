@@ -147,6 +147,22 @@ resource "aws_ecs_task_definition" "web" {
           {
             name  = "S3_BUCKET_NAME"
             value = local.s3_bucket_name
+          },
+          {
+            name  = "DB_HOST"
+            value = local.db_host
+          },
+          {
+            name  = "DB_NAME"
+            value = local.db_name
+          },
+          {
+            name  = "DB_USER"
+            value = local.db_username
+          },
+          {
+            name  = "DB_PASSWORD"
+            value = local.db_password
           }
         ]
         logConfiguration = {
@@ -215,6 +231,14 @@ resource "aws_security_group" "ecs_service" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Access to RDS database
+  egress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # Inbound access from internet via Load balancer
   ingress {
     from_port = 8000
@@ -234,6 +258,10 @@ resource "aws_ecs_service" "web" {
   launch_type            = "FARGATE"
   platform_version       = "1.4.0"
   enable_execute_command = true
+
+  depends_on = [
+    aws_db_instance.main
+  ]
 
   network_configuration {
 

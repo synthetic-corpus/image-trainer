@@ -15,15 +15,21 @@ from urllib.parse import unquote_plus
 from botocore.exceptions import ClientError, NoCredentialsError, \
     ParamValidationError
 
+# Database imports
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 # Custom modules
 # Handle both local development and Lambda environments
 try:
     # Try Lambda environment first (modules at same level)
     from modules.s3_access import S3Access
+    from ..db_models import Image_table
 except ImportError:
     # Fall back to local development (modules one level up)
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     from modules.s3_access import S3Access
+    from db_models import Image_table
 
 
 # Configure CloudWatch logging
@@ -32,6 +38,42 @@ logger.setLevel(logging.INFO)
 
 # Initialize S3 access
 s3_access = None
+
+# Initialize database connection
+db_engine = None
+db_session = None
+
+
+def get_db_session():
+    """Get or create database session."""
+    global db_engine, db_session
+
+    if db_engine is None:
+        # Get database connection parameters from environment
+        db_host = os.environ.get('DB_HOST')
+        db_port = os.environ.get('DB_PORT', '5432')
+        db_name = os.environ.get('DB_NAME')
+        db_user = os.environ.get('DB_USER')
+        db_password = os.environ.get('DB_PASSWORD')
+
+        if not all([db_host, db_name, db_user, db_password]):
+            logger.error("Database environment variables not set")
+            return None
+
+        # Create connection string
+        connection_string = f"postgresql://{db_user}:{db_password}\
+            @{db_host}:{db_port}/{db_name}"  # noqa: E231
+
+        try:
+            db_engine = create_engine(connection_string)
+            Session = sessionmaker(bind=db_engine)
+            db_session = Session()
+            logger.info("Database connection established")
+        except Exception as e:
+            logger.error(f"Failed to establish database connection: {e}")
+            return None
+
+    return db_session
 
 
 def lambda_handler(event, context):
@@ -222,6 +264,26 @@ def process_image_file(file_key):
                                 'Message': error_msg}},
                 operation_name='CopyObject'
             )
+
+        # Insert record into database
+        try:
+            session = get_db_session()
+            if session:
+                # Create new Image_table record
+                new_image = Image_table()
+
+                session.add(new_image)
+                session.commit()
+                logger.info(f"Successfully inserted database record for \
+                            {new_filename}")
+            else:
+                logger.warning("Database session not available, skipping \
+                               database insertion")
+        except Exception as e:
+            logger.error(f"Failed to insert database record for \
+                         {new_filename}: {e}")
+            # Don't fail the entire process if database insertion fails
+            # The file was successfully copied, so we continue
 
         logger.info(f"Successfully processed {file_key} -> {new_key}")
         return {

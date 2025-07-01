@@ -86,9 +86,9 @@ resource "aws_db_instance" "main" {
   storage_encrypted     = true
 
   # Database configuration - conditional based on snapshot usage
-  db_name  = var.use_snapshot ? null : var.db_name  # Use snapshot's db name if restoring
-  username = var.use_snapshot ? null : var.db_username  # Use snapshot's username if restoring
-  password = var.use_snapshot ? null : var.db_password  # Use snapshot's password if restoring
+  db_name  = var.use_snapshot ? null : local.db_name  # Use snapshot's db name if restoring
+  username = var.use_snapshot ? null : local.db_username  # Use snapshot's username if restoring
+  password = var.use_snapshot ? null : local.db_password  # Use snapshot's password if restoring
   port     = 5432
 
   # Snapshot configuration (only used if use_snapshot is true)

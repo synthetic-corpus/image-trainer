@@ -34,6 +34,14 @@ locals {
   s3_bucket_name       = var.s3_bucket_name
   ecr_lambda_md5_image = var.ecr_lambda_md5_image
   project_name         = var.project
+  
+  # Database connection details
+  db_username = var.db_username
+  db_name     = var.db_name
+  db_password = var.db_password
+  
+  # Database host/endpoint (everything after @ in connection string)
+  db_host = "${aws_db_instance.main.endpoint}:5432/${local.db_name}"
 }
 
 data "aws_region" "current" {}
