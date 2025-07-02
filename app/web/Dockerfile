@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY web .
 
 # Copy modules and ensure they're in Python path
+COPY db_models ./db_models/
 COPY modules ./modules/
 ENV PYTHONPATH=/app
 

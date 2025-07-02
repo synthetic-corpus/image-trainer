@@ -49,7 +49,7 @@ if DB_HOST and DB_PASSWORD:
     db = SQLAlchemy(app)
 
     # Import and initialize the Image model
-    from ..db_models.image_table import Image_table
+    from db_models.image_table import Image_table
 
     logger.info("Database connection configured successfully")
 else:
