@@ -72,7 +72,7 @@ resource "aws_db_parameter_group" "main" {
 
 # RDS Instance
 resource "aws_db_instance" "main" {
-  identifier = "simpleMLdatabase"
+  identifier = "mldatabase"
 
   # Engine configuration
   engine         = "postgres"
@@ -120,7 +120,7 @@ resource "aws_db_instance" "main" {
   parameter_group_name = aws_db_parameter_group.main.name
 
   tags = {
-    Name        = "simpleMLdatabase"
+    Name        = "mldatabase"
     Environment = var.environment
     Project     = var.project_name
   }
