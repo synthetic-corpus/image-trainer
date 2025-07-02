@@ -18,7 +18,7 @@ COPY --from=builder ${LAMBDA_TASK_ROOT} ${LAMBDA_TASK_ROOT}
 COPY modules ${LAMBDA_TASK_ROOT}/modules
 
 # Copy database models
-COPY app/db_models ${LAMBDA_TASK_ROOT}/db_models
+COPY db_models ${LAMBDA_TASK_ROOT}/db_models
 
 # Copy function code
 COPY process/file_processor.py ${LAMBDA_TASK_ROOT}
