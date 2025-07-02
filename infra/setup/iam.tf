@@ -420,6 +420,11 @@ data "aws_iam_policy_document" "rds" {
       "rds:DescribeDBInstanceAutomatedBackups",
       "rds:DeleteDBInstanceAutomatedBackup",
       "rds:RestoreDBInstanceFromAutomatedBackup",
+      "rds:CreateDBParameterGroup",
+      "rds:DeleteDBParameterGroup",
+      "rds:ModifyDBParameterGroup",
+      "rds:DescribeDBParameterGroups",
+      "rds:DescribeDBParameters",
       # Parameter and option groups
       "rds:DescribeDBParameterGroups",
       "rds:DescribeDBOptionGroups",
