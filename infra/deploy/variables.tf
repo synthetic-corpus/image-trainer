@@ -99,8 +99,13 @@ variable "contact" {
 }
 
 variable "db_username" {
-  description = "For access the database"
-  default     = "recipeapp"
+  description = "Username for database access"
+  default     = "image-trainer-user"
+}
+
+variable "db_name" {
+  description = "Name of the database"
+  default     = "image-trainer-db"
 }
 
 variable "db_password" {
@@ -134,4 +139,16 @@ variable "domain_name" {
   description = "Domain name for the application (e.g., image-trainer.magicalapis.net)"
   type        = string
   default     = "image-trainer.magicalapis.net"
+}
+
+variable "use_snapshot" {
+  description = "Whether to restore RDS from snapshot (true) or create fresh (false)"
+  type        = bool
+  default     = false
+}
+
+variable "snapshot_identifier" {
+  description = "Snapshot identifier to restore from (only used if use_snapshot is true)"
+  type        = string
+  default     = ""
 }

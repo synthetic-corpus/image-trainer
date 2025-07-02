@@ -32,6 +32,12 @@ ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV IMAGE_URL=https://some-cdn.amazonaws.com/my-placeholder.jpeg
 
+# Database environment variables (will be overridden by ECS task definition)
+ENV DB_HOST=""
+ENV DB_NAME="image-trainer-db"
+ENV DB_USER="image-trainer-user"
+ENV DB_PASSWORD=""
+
 # Switch to www-data user
 USER www-data
 

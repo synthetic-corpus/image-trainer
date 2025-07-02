@@ -410,7 +410,24 @@ data "aws_iam_policy_document" "rds" {
       "rds:DeleteDBInstance",
       "rds:ListTagsForResource",
       "rds:ModifyDBInstance",
-      "rds:AddTagsToResource"
+      "rds:AddTagsToResource",
+      # Backup and snapshot management
+      "rds:DescribeDBSnapshots",
+      "rds:CreateDBSnapshot",
+      "rds:DeleteDBSnapshot",
+      "rds:RestoreDBInstanceFromDBSnapshot",
+      "rds:RestoreDBInstanceFromS3",
+      "rds:DescribeDBInstanceAutomatedBackups",
+      "rds:DeleteDBInstanceAutomatedBackup",
+      "rds:RestoreDBInstanceFromAutomatedBackup",
+      # Parameter and option groups
+      "rds:DescribeDBParameterGroups",
+      "rds:DescribeDBOptionGroups",
+      # Additional useful permissions
+      "rds:DescribeDBEngineVersions",
+      "rds:DescribeOrderableDBInstanceOptions",
+      "rds:DescribeDBInstanceAutomatedBackups",
+      "rds:DescribePendingMaintenanceActions"
     ]
     resources = ["*"]
   }
