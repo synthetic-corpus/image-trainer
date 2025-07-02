@@ -100,12 +100,12 @@ variable "contact" {
 
 variable "db_username" {
   description = "Username for database access"
-  default     = "image-trainer-user"
+  default     = "imagetraineruser"
 }
 
 variable "db_name" {
   description = "Name of the database"
-  default     = "image-trainer-db"
+  default     = "imagetrainerdb"
 }
 
 variable "db_password" {
