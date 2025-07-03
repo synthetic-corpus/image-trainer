@@ -55,6 +55,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+          aws --version
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -109,6 +116,9 @@ jobs:
 
       - name: Determine Database Approach
         if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
+        env:
+          DB_USER: "imagetraineruser"
+          DB_PASSWORD: ${{ secrets.TF_VAR_DB_PASSWORD }}
         run: |
           cd infra/deploy
           chmod +x scripts/*.sh
