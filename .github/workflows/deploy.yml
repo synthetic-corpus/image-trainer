@@ -55,13 +55,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install AWS CLI
-        run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
-          aws --version
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -114,15 +107,62 @@ jobs:
           cd infra/deploy
           terraform init
 
+      - name: Debug Script Environment
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
+        run: |
+          echo "=== Debugging Script Environment ==="
+          echo "Current directory: $(pwd)"
+          echo "Available tools:"
+          which aws || echo "AWS CLI not found"
+          which jq || echo "jq not found"
+          which python3 || echo "python3 not found"
+          which pip || echo "pip not found"
+          which psql || echo "psql not found"
+          echo "PATH: $PATH"
+          echo ""
+
+      - name: Debug Script Permissions
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
+        run: |
+          echo "=== Debugging Script Permissions ==="
+          cd infra/deploy
+          echo "Scripts directory contents:"
+          ls -la scripts/
+          echo ""
+          echo "Making scripts executable..."
+          chmod +x scripts/*.sh
+          echo "After chmod:"
+          ls -la scripts/
+          echo ""
+
+      - name: Debug Script Contents
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
+        run: |
+          echo "=== Debugging Script Contents ==="
+          cd infra/deploy/scripts
+          echo "First 10 lines of each script:"
+          for script in *.sh; do
+            echo "--- $script ---"
+            head -10 "$script"
+            echo ""
+          done
+
       - name: Determine Database Approach
         if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
         env:
           DB_USER: "imagetraineruser"
           DB_PASSWORD: ${{ secrets.TF_VAR_DB_PASSWORD }}
         run: |
+          echo "=== Running Determine Database Approach ==="
           cd infra/deploy
+          echo "Current directory: $(pwd)"
           chmod +x scripts/*.sh
           cd scripts
+          echo "Scripts directory: $(pwd)"
+          echo "Available scripts:"
+          ls -la *.sh
+          echo ""
+          echo "Running determine-db-approach.sh..."
           eval "$(./determine-db-approach.sh)"
           echo "USE_SNAPSHOT=${USE_SNAPSHOT}" >> $GITHUB_ENV
           echo "SNAPSHOT_IDENTIFIER=${SNAPSHOT_IDENTIFIER}" >> $GITHUB_ENV
