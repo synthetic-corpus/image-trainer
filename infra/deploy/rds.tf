@@ -72,18 +72,15 @@ resource "aws_db_parameter_group" "main" {
 
 # RDS Instance
 resource "aws_db_instance" "main" {
-  identifier = "mldatabase"
-
-  # Engine configuration
-  engine         = "postgres"
-  engine_version = "17.5"
-  instance_class = "db.t3.micro" # Smallest instance class
-
-  # Storage configuration
-  allocated_storage     = 20 # 20 GB (minimum for PostgreSQL)
-  max_allocated_storage = 25 # Maximum 25 GB as requested
-  storage_type          = "gp2"
-  storage_encrypted     = true
+  identifier                 = "${local.prefix}-db"
+  allocated_storage          = 100   # in gb. Min size of io1 and postgres
+  storage_type               = "io1" # "gp2" for simplest
+  engine                     = "postgres"
+  engine_version             = "15.13"
+  auto_minor_version_upgrade = true
+  instance_class             = "db.t4g.micro" # "db.t4g.micro" for simplest
+  iops                       = 2000           # 50x100 = 5000. 5000 would be the max here
+  storage_encrypted          = true
 
   # Database configuration - conditional based on snapshot usage
   db_name  = var.use_snapshot ? null : local.db_name     # Use snapshot's db name if restoring
@@ -92,6 +89,7 @@ resource "aws_db_instance" "main" {
   port     = 5432
 
   # Snapshot configuration (only used if use_snapshot is true)
+  skip_final_snapshot = false
   snapshot_identifier = var.use_snapshot ? var.snapshot_identifier : null
 
   # Network configuration
@@ -104,7 +102,6 @@ resource "aws_db_instance" "main" {
   backup_retention_period   = 7
   backup_window             = "03:00-04:00"
   maintenance_window        = "sun:04:00-sun:05:00"
-  skip_final_snapshot       = false # As requested
   final_snapshot_identifier = "${local.prefix}-db-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
 
   # Performance insights
