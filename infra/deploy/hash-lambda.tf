@@ -103,6 +103,31 @@ resource "aws_iam_policy" "lambda_ecr_policy" {
   }
 }
 
+data "aws_iam_policy_document" "lambda_vpc_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:CreateNetworkInterface",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "lambda_vpc_policy" {
+  name        = "${var.prefix}-lambda-vpc-policy-${var.environment}"
+  description = "Policy for Lambda to manage network interfaces in VPC"
+  policy      = data.aws_iam_policy_document.lambda_vpc_policy.json
+
+  tags = {
+    Name = "${var.prefix}-lambda-vpc-policy-${var.environment}"
+  }
+}
+
 #######################################
 # Policy attachements for this Lambda #
 #######################################
@@ -119,6 +144,11 @@ resource "aws_iam_role_policy_attachment" "lambda_logs_attachment" {
 resource "aws_iam_role_policy_attachment" "lambda_ecr_attachment" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_ecr_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_vpc_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_vpc_policy.arn
 }
 
 resource "aws_cloudwatch_log_group" "lambda_logs" {
@@ -164,6 +194,7 @@ resource "aws_lambda_function" "processor" {
     aws_iam_role_policy_attachment.lambda_s3_attachment,
     aws_iam_role_policy_attachment.lambda_logs_attachment,
     aws_iam_role_policy_attachment.lambda_ecr_attachment,
+    aws_iam_role_policy_attachment.lambda_vpc_attachment,
     aws_ecr_repository_policy.hash_lambda_policy,
     aws_db_instance.main
   ]
