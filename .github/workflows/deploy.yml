@@ -164,10 +164,17 @@ jobs:
           echo ""
           echo "Running determine-db-approach.sh..."
           eval "$(./determine-db-approach.sh)"
-          echo "USE_SNAPSHOT=${USE_SNAPSHOT}" >> $GITHUB_ENV
+          # Convert string "true"/"false" to boolean for Terraform
+          if [ "$USE_SNAPSHOT" = "true" ]; then
+            echo "USE_SNAPSHOT=true" >> $GITHUB_ENV
+          else
+            echo "USE_SNAPSHOT=false" >> $GITHUB_ENV
+          fi
           echo "SNAPSHOT_IDENTIFIER=${SNAPSHOT_IDENTIFIER}" >> $GITHUB_ENV
           echo "DB_APPROACH=${DB_APPROACH}" >> $GITHUB_ENV
           echo "Database approach: ${DB_APPROACH}"
+          echo "USE_SNAPSHOT value: ${USE_SNAPSHOT}"
+          echo "USE_SNAPSHOT type: $(echo "$USE_SNAPSHOT" | tr -d '"')"
 
       - name: Terraform Plan
         env:
