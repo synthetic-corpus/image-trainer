@@ -45,8 +45,8 @@ locals {
   db_password = sensitive(var.db_password)
 
   # Database host/endpoint (everything after @ in connection string)
-  db_host = "${aws_db_instance.main.endpoint}/${local.db_name}"
-  ami_image_id = "ami-03165efb4425606ee"  # my custom AMI! 
+  db_host      = "${aws_db_instance.main.endpoint}/${local.db_name}"
+  ami_image_id = "ami-03165efb4425606ee" # my custom AMI! 
 }
 
 data "aws_region" "current" {}
