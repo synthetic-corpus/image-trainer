@@ -166,16 +166,16 @@ resource "aws_ecs_task_definition" "db_init" {
 
   container_definitions = jsonencode([
     {
-      name  = "db-init"
-      image = "postgres:15"
-      essential = true
+      name              = "db-init"
+      image             = "postgres:15"
+      essential         = true
       memoryReservation = 256
-      
+
       command = [
         "sh", "-c",
         "echo '${file("${path.module}/scripts/init-database.sql")}' > /tmp/init-database.sql && PGPASSWORD=$$DB_PASSWORD psql -h $$DB_HOST -U $$DB_USER -d $$DB_NAME -f /tmp/init-database.sql"
       ]
-      
+
       environment = [
         {
           name  = "DB_HOST"
@@ -194,7 +194,7 @@ resource "aws_ecs_task_definition" "db_init" {
           value = local.db_password
         }
       ]
-      
+
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -213,22 +213,26 @@ resource "aws_ecs_task_definition" "db_init" {
   }
 }
 
-# ECS Task for Database Initialization (runs once)
-resource "aws_ecs_task" "db_init_task" {
-  cluster           = aws_ecs_cluster.main.id
-  task_definition   = aws_ecs_task_definition.db_init.arn
-  launch_type       = "FARGATE"
-  
-  network_configuration {
-    subnets         = [aws_subnet.private_a.id, aws_subnet.private_b.id]
-    security_groups = [aws_security_group.ecs_service.id]
-  }
-  
+# Database Initialization using null_resource and AWS CLI
+resource "null_resource" "db_init" {
   depends_on = [aws_db_instance.main]
-  
-  # Task runs once and exits
-  lifecycle {
-    create_before_destroy = true
+
+  triggers = {
+    # Re-run if database endpoint changes
+    db_endpoint = aws_db_instance.main.endpoint
+    # Re-run if initialization script changes
+    init_script_hash = filemd5("${path.module}/scripts/init-database.sql")
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws ecs run-task \
+        --cluster ${aws_ecs_cluster.main.name} \
+        --task-definition ${aws_ecs_task_definition.db_init.family}:${aws_ecs_task_definition.db_init.revision} \
+        --launch-type FARGATE \
+        --network-configuration "awsvpcConfiguration={subnets=[${aws_subnet.private_a.id},${aws_subnet.private_b.id}],securityGroups=[${aws_security_group.ecs_service.id}],assignPublicIp=DISABLED}" \
+        --region ${data.aws_region.current.name}
+    EOT
   }
 }
 
