@@ -222,6 +222,21 @@ jobs:
           DB_USER: ${{ env.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.TF_VAR_DB_PASSWORD }}
         run: |
+          echo "=== Setup Database Tables Debug ==="
+          echo "DB_HOST: $DB_HOST"
+          echo "DB_NAME: $DB_NAME"
+          echo "DB_USER: $DB_USER"
+          if [ -n "$DB_PASSWORD" ]; then
+            echo "DB_PASSWORD: [SET - HIDDEN]"
+          else
+            echo "DB_PASSWORD: [NOT SET - EMPTY]"
+          fi
+          echo "Current directory: $(pwd)"
           cd infra/deploy
+          echo "After cd infra/deploy: $(pwd)"
           chmod +x scripts/*.sh
+          echo "Scripts directory:"
+          ls -la scripts/
+          echo ""
+          echo "Running setup-database-tables.sh..."
           ./scripts/setup-database-tables.sh 

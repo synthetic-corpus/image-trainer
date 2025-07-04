@@ -12,7 +12,7 @@ PREFIX=${1:-"ml-simple"}
 echo "Determining database approach for prefix: ${PREFIX}" >&2
 
 # Find the latest snapshot
-LATEST_SNAPSHOT=$(find-latest-snapshot.sh "${PREFIX}")
+LATEST_SNAPSHOT=$(./find-latest-snapshot.sh "${PREFIX}")
 
 if [ -n "$LATEST_SNAPSHOT" ]; then
     echo "Found snapshot: ${LATEST_SNAPSHOT}" >&2
