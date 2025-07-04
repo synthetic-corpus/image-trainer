@@ -45,7 +45,7 @@ locals {
   db_password = sensitive(var.db_password)
 
   # Database host/endpoint (everything after @ in connection string)
-  db_host = "${aws_db_instance.main.endpoint}:5432/${local.db_name}"
+  db_host = "${aws_db_instance.main.endpoint}/${local.db_name}"
 }
 
 data "aws_region" "current" {}
