@@ -79,8 +79,10 @@ data "aws_iam_policy_document" "infrastructure" {
   statement {
     effect = "Allow"
     actions = [
+      "ec2:DescribeAddresses",
       "ec2:DescribeVpcs",
       "ec2:CreateTags",
+      "ec2:DeleteTags",
       "ec2:CreateVpc",
       "ec2:DeleteVpc",
       "ec2:DescribeSecurityGroups",
@@ -115,6 +117,29 @@ data "aws_iam_policy_document" "infrastructure" {
       "ec2:AttachInternetGateway",
       "ec2:ModifyVpcAttribute",
       "ec2:RevokeSecurityGroupIngress",
+      "ec2:AllocateAddress",
+      "ec2:ReleaseAddress",
+      "ec2:CreateNatGateway",
+      "ec2:DeleteNatGateway",
+      "ec2:DescribeNatGateways",
+      "ec2:AssociateAddress",
+      "ec2:DisassociateAddress",
+      "ec2:RunInstances",
+      "ec2:TerminateInstances",
+      "ec2:DescribeInstances",
+      "ec2:StartInstances",
+      "ec2:StopInstances",
+      "ec2:RebootInstances",
+      "ec2:DescribeInstanceStatus",
+      "ec2:DescribeImages",
+      "ec2:DescribeKeyPairs",
+      "ec2:CreateNetworkInterface",
+      "ec2:AttachNetworkInterface",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:ModifyNetworkInterfaceAttribute",
+      "ec2:AssociateIamInstanceProfile",
+      "ec2:DescribeIamInstanceProfileAssociations",
     ]
     resources = ["*"]
   }
