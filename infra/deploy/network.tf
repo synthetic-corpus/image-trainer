@@ -216,7 +216,7 @@ resource "aws_subnet" "private_nat" {
 }
 
 resource "aws_eip" "nat_private" {
-  vpc = true
+  domain = "vpc"
   tags = {
     Name = "${local.prefix}-nat-eip-private-subnet"
   }
