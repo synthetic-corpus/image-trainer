@@ -49,4 +49,12 @@ resource "aws_instance" "console_test" {
   tags = {
     Name = "console-test-ec2"
   }
+}
+
+resource "aws_ec2_instance_connect_endpoint" "private_nat" {
+  subnet_id          = aws_subnet.private_nat.id
+  security_group_ids = [aws_security_group.console_access.id]
+  tags = {
+    Name = "${local.prefix}-ec2-instance-connect-endpoint"
+  }
 } 

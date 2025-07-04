@@ -79,6 +79,8 @@ data "aws_iam_policy_document" "infrastructure" {
   statement {
     effect = "Allow"
     actions = [
+      "ec2:DescribeTags",
+      "ec2:DescribeInstanceTypes",
       "ec2:DescribeAddresses",
       "ec2:DescribeVpcs",
       "ec2:CreateTags",
@@ -139,7 +141,22 @@ data "aws_iam_policy_document" "infrastructure" {
       "ec2:DescribeNetworkInterfaces",
       "ec2:ModifyNetworkInterfaceAttribute",
       "ec2:AssociateIamInstanceProfile",
+      "ec2:DisassociateIamInstanceProfile",
       "ec2:DescribeIamInstanceProfileAssociations",
+      "ec2:DescribeInstanceAttribute",
+      "ec2:ModifyInstanceAttribute",
+      "ec2:DescribeAvailabilityZones",
+      "ec2:DescribeVolumes",
+      "ec2:AttachVolume",
+      "ec2:DetachVolume",
+      "ec2:CreateVolume",
+      "ec2:DeleteVolume",
+      "ec2:DescribeSnapshots",
+      "ec2:DescribeInstanceCreditSpecifications",
+      "ec2:CreateInstanceConnectEndpoint",
+      "ec2:DeleteInstanceConnectEndpoint",
+      "ec2:DescribeInstanceConnectEndpoints",
+      "ec2-instance-connect:SendSSHPublicKey",
     ]
     resources = ["*"]
   }
