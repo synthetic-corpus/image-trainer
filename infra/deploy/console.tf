@@ -24,12 +24,63 @@ resource "aws_security_group" "console_access" {
   }
 }
 
+resource "aws_iam_role" "console_s3_role" {
+  name = "console-ec2-s3-role"
+
+  assume_role_policy = data.aws_iam_policy_document.console_s3_assume_role_policy.json
+}
+
+# Assume role policy document
+data "aws_iam_policy_document" "console_s3_assume_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+# S3 access policy document
+data "aws_iam_policy_document" "console_s3_policy_doc" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      data.aws_s3_bucket.existing.arn,
+      "${data.aws_s3_bucket.existing.arn}/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "console_s3_policy" {
+  name   = "console-ec2-s3-policy"
+  policy = data.aws_iam_policy_document.console_s3_policy_doc.json
+}
+
+resource "aws_iam_role_policy_attachment" "console_s3_attach" {
+  role       = aws_iam_role.console_s3_role.name
+  policy_arn = aws_iam_policy.console_s3_policy.arn
+}
+
+resource "aws_iam_instance_profile" "console_s3_profile" {
+  name = "console-ec2-s3-profile"
+  role = aws_iam_role.console_s3_role.name
+}
+
 resource "aws_instance" "console_test" {
-  ami                         = local.ami_image_id
+  ami                         = "ami-0c2b8ca1dad447f8a"
   instance_type               = "t3.medium"
   subnet_id                   = aws_subnet.private_nat.id
   vpc_security_group_ids      = [aws_security_group.console_access.id]
   associate_public_ip_address = false
+  iam_instance_profile        = aws_iam_instance_profile.console_s3_profile.name
 
   user_data = <<-EOF
     #!/bin/bash

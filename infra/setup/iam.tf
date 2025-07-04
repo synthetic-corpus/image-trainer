@@ -157,6 +157,23 @@ data "aws_iam_policy_document" "infrastructure" {
       "ec2:DeleteInstanceConnectEndpoint",
       "ec2:DescribeInstanceConnectEndpoints",
       "ec2-instance-connect:SendSSHPublicKey",
+      "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:GetRole",
+      "iam:ListRoles",
+      "iam:CreateInstanceProfile",
+      "iam:DeleteInstanceProfile",
+      "iam:GetInstanceProfile",
+      "iam:ListInstanceProfiles",
+      "iam:AddRoleToInstanceProfile",
+      "iam:RemoveRoleFromInstanceProfile",
+      "iam:PassRole",
+      "iam:AttachRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:PutRolePolicy",
+      "iam:DeleteRolePolicy",
+      "iam:GetPolicy",
+      "iam:ListPolicies",
     ]
     resources = ["*"]
   }
