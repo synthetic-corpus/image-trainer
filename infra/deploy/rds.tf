@@ -148,4 +148,96 @@ output "db_username" {
 output "db_identifier" {
   description = "The RDS instance identifier"
   value       = aws_db_instance.main.identifier
+}
+
+#######################################
+# Database Initialization ECS Task   #
+#######################################
+
+# ECS Task Definition for Database Initialization
+resource "aws_ecs_task_definition" "db_init" {
+  family                   = "${local.prefix}-db-init"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 256
+  network_mode             = "awsvpc"
+  memory                   = 512
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "db-init"
+      image = "postgres:15"
+      essential = true
+      memoryReservation = 256
+      
+      command = [
+        "sh", "-c",
+        "echo '${file("${path.module}/scripts/init-database.sql")}' > /tmp/init-database.sql && PGPASSWORD=$$DB_PASSWORD psql -h $$DB_HOST -U $$DB_USER -d $$DB_NAME -f /tmp/init-database.sql"
+      ]
+      
+      environment = [
+        {
+          name  = "DB_HOST"
+          value = aws_db_instance.main.endpoint
+        },
+        {
+          name  = "DB_NAME"
+          value = local.db_name
+        },
+        {
+          name  = "DB_USER"
+          value = local.db_username
+        },
+        {
+          name  = "DB_PASSWORD"
+          value = local.db_password
+        }
+      ]
+      
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/aws/ecs/${local.project_name}/db-init"
+          awslogs-region        = data.aws_region.current.name
+          awslogs-stream-prefix = "db-init"
+        }
+      }
+    }
+  ])
+
+
+
+  tags = {
+    Name = "${local.prefix}-db-init-task"
+  }
+}
+
+# ECS Task for Database Initialization (runs once)
+resource "aws_ecs_task" "db_init_task" {
+  cluster           = aws_ecs_cluster.main.id
+  task_definition   = aws_ecs_task_definition.db_init.arn
+  launch_type       = "FARGATE"
+  
+  network_configuration {
+    subnets         = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+    security_groups = [aws_security_group.ecs_service.id]
+  }
+  
+  depends_on = [aws_db_instance.main]
+  
+  # Task runs once and exits
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# CloudWatch Log Group for DB Init
+resource "aws_cloudwatch_log_group" "ecs_db_init" {
+  name              = "/aws/ecs/${local.project_name}/db-init"
+  retention_in_days = 7
+
+  tags = {
+    Name = "${local.prefix}-db-init-logs"
+  }
 } 
