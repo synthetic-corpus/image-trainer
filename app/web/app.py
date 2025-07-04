@@ -40,6 +40,15 @@ DB_NAME = os.environ.get('DB_NAME', 'image-trainer-db')
 DB_USER = os.environ.get('DB_USER', 'image-trainer-user')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
+# Print out Variables For Debugging
+logger.info(f"DB_HOST: {DB_HOST}")
+logger.info(f"DB_NAME: {DB_NAME}")
+logger.info(f"DB_USER: {DB_USER}")
+if len(DB_PASSWORD) > 0:
+    logger.info(f"DB_PASSWORD: {DB_PASSWORD[:4]}******")
+else:
+    logger.info("DB_PASSWORD: Not SET!")
+
 if DB_HOST and DB_PASSWORD:
     # Construct database connection string
     DATABASE_URI = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}' # noqa
