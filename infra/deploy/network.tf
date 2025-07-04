@@ -202,3 +202,48 @@ resource "aws_vpc_endpoint" "s3" {
     Name = "${local.prefix}-s3-endpoint"
   }
 }
+
+# --- New Private Subnet with Dedicated NAT Gateway ---
+
+resource "aws_subnet" "private_nat" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.1.12.0/24" # next available /24
+  map_public_ip_on_launch = false
+  availability_zone       = "us-west-2a"
+  tags = {
+    Name = "${local.prefix}-private-subnet-nat"
+  }
+}
+
+resource "aws_eip" "nat_private" {
+  vpc = true
+  tags = {
+    Name = "${local.prefix}-nat-eip-private-subnet"
+  }
+}
+
+resource "aws_nat_gateway" "private_nat" {
+  allocation_id = aws_eip.nat_private.id
+  subnet_id     = aws_subnet.public_a.id # Place NAT Gateway in public subnet A
+  tags = {
+    Name = "${local.prefix}-nat-gateway-private-subnet"
+  }
+}
+
+resource "aws_route_table" "private_nat" {
+  vpc_id = aws_vpc.main.id
+  tags = {
+    Name = "${local.prefix}-private-nat-route-table"
+  }
+}
+
+resource "aws_route" "private_nat_internet" {
+  route_table_id         = aws_route_table.private_nat.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.private_nat.id
+}
+
+resource "aws_route_table_association" "private_nat" {
+  subnet_id      = aws_subnet.private_nat.id
+  route_table_id = aws_route_table.private_nat.id
+}

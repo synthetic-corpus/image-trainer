@@ -26,6 +26,15 @@ resource "aws_security_group" "rds" {
     description     = "PostgreSQL access from hash Lambda function"
   }
 
+  # Allow PostgreSQL access from new private NAT subnet
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    cidr_blocks     = [aws_subnet.private_nat.cidr_block]
+    description     = "PostgreSQL access from new private NAT subnet"
+  }
+
   # Allow all outbound traffic
   egress {
     from_port   = 0
