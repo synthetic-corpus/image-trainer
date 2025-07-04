@@ -49,3 +49,23 @@ locals {
 }
 
 data "aws_region" "current" {}
+
+output "private_nat_subnet_id" {
+  description = "The ID of the third private subnet (private_nat)"
+  value       = aws_subnet.private_nat.id
+}
+
+output "private_nat_subnet_name" {
+  description = "The Name tag of the third private subnet (private_nat)"
+  value       = aws_subnet.private_nat.tags["Name"]
+}
+
+output "console_ssh_security_group_id" {
+  description = "The ID of the security group for console SSH access"
+  value       = aws_security_group.console_access.id
+}
+
+output "console_ssh_security_group_name" {
+  description = "The Name tag of the security group for console SSH access"
+  value       = aws_security_group.console_access.name
+}

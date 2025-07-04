@@ -248,6 +248,15 @@ resource "aws_security_group" "ecs_service" {
       aws_security_group.loadbalancer.id
     ]
   }
+
+  # Allow SSH from new private NAT subnet
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.private_nat.cidr_block]
+    description = "SSH access from new private NAT subnet"
+  }
 }
 
 resource "aws_ecs_service" "web" {
