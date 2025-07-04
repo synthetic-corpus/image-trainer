@@ -25,7 +25,7 @@ resource "aws_security_group" "console_access" {
 }
 
 resource "aws_instance" "console_test" {
-  ami                         = "ami-0c2b8ca1dad447f8a"
+  ami                         = local.ami_image_id
   instance_type               = "t3.medium"
   subnet_id                   = aws_subnet.private_nat.id
   vpc_security_group_ids      = [aws_security_group.console_access.id]
