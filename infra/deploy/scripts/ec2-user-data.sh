@@ -17,9 +17,9 @@ systemctl start ec2-instance-connect
 echo "Verifying EC2 Instance Connect service status..."
 systemctl status ec2-instance-connect || echo "Service status check failed, but continuing..."
 
-# Install CloudWatch agent
-echo "Installing CloudWatch agent..."
-yum install -y amazon-cloudwatch-agent
+# Install CloudWatch agent and AWS CLI
+echo "Installing CloudWatch agent and AWS CLI..."
+yum install -y amazon-cloudwatch-agent aws-cli
 
 # Get instance ID for log stream naming
 INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
@@ -90,6 +90,24 @@ systemctl status amazon-cloudwatch-agent || echo "CloudWatch agent status check 
 # Test log writing
 echo "Testing CloudWatch log writing..."
 echo "Test log entry from EC2 instance initialization - $(date)" >> /var/log/messages
+
+# Additional debugging
+echo "CloudWatch agent configuration:"
+cat /opt/aws/amazon-cloudwatch-agent/bin/config.json
+
+echo "CloudWatch agent logs:"
+journalctl -u amazon-cloudwatch-agent --no-pager -n 20 || echo "No CloudWatch agent logs found"
+
+echo "System logs for debugging:"
+tail -n 20 /var/log/messages || echo "No system messages found"
+
+# Test direct CloudWatch log writing with AWS CLI
+echo "Testing direct CloudWatch log writing with AWS CLI..."
+aws logs put-log-events \
+  --log-group-name "/aws/ec2/console-test" \
+  --log-stream-name "manual-test" \
+  --log-events timestamp=$(date +%s)000,message="Manual test log entry from EC2 instance - $(date)" \
+  --region $(curl -s http://169.254.169.254/latest/meta-data/placement/region) || echo "Direct CloudWatch log writing failed"
 
 # Set up environment variables
 echo "Setting up environment variables..."
