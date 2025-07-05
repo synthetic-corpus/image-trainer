@@ -182,7 +182,33 @@ resource "aws_ecs_task_definition" "db_init" {
 
       command = [
         "sh", "-c",
-        "echo '${file("${path.module}/scripts/init-database.sql")}' > /tmp/init-database.sql && PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f /tmp/init-database.sql"
+        <<-EOT
+          set -e
+          echo "=== Database Initialization Started ==="
+          echo "Timestamp: $(date)"
+          echo "Database Host: $DB_HOST"
+          echo "Database Name: $DB_NAME"
+          echo "Database User: $DB_USER"
+          echo "Testing database connection..."
+          
+          # Test connection first
+          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "SELECT version();" || {
+            echo "ERROR: Failed to connect to database"
+            exit 1
+          }
+          
+          echo "Database connection successful!"
+          echo "Writing initialization script..."
+          echo '${file("${path.module}/scripts/init-database.sql")}' > /tmp/init-database.sql
+          echo "Running database initialization script..."
+          
+          # Run the initialization script
+          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f /tmp/init-database.sql
+          
+          echo "=== Database Initialization Completed Successfully ==="
+          echo "Timestamp: $(date)"
+          echo "All tables and schemas have been created."
+        EOT
       ]
 
       environment = [
@@ -215,8 +241,6 @@ resource "aws_ecs_task_definition" "db_init" {
     }
   ])
 
-
-
   tags = {
     Name = "${local.prefix}-db-init-task"
   }
@@ -235,12 +259,69 @@ resource "null_resource" "db_init" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      aws ecs run-task \
+      echo "=== Starting Database Initialization Task ==="
+      echo "Timestamp: $(date)"
+      echo "Database Endpoint: ${aws_db_instance.main.endpoint}"
+      echo "Task Definition: ${aws_ecs_task_definition.db_init.family}:${aws_ecs_task_definition.db_init.revision}"
+      
+      # Run the ECS task
+      TASK_ARN=$(aws ecs run-task \
         --cluster ${aws_ecs_cluster.main.name} \
         --task-definition ${aws_ecs_task_definition.db_init.family}:${aws_ecs_task_definition.db_init.revision} \
         --launch-type FARGATE \
         --network-configuration "awsvpcConfiguration={subnets=[${aws_subnet.private_a.id},${aws_subnet.private_b.id}],securityGroups=[${aws_security_group.ecs_service.id}],assignPublicIp=DISABLED}" \
+        --region ${data.aws_region.current.name} \
+        --query 'tasks[0].taskArn' \
+        --output text)
+      
+      echo "Task ARN: $TASK_ARN"
+      echo "Waiting for task to complete..."
+      
+      # Wait for task to complete
+      aws ecs wait tasks-stopped \
+        --cluster ${aws_ecs_cluster.main.name} \
+        --tasks $TASK_ARN \
         --region ${data.aws_region.current.name}
+      
+      # Get task status
+      TASK_STATUS=$(aws ecs describe-tasks \
+        --cluster ${aws_ecs_cluster.main.name} \
+        --tasks $TASK_ARN \
+        --region ${data.aws_region.current.name} \
+        --query 'tasks[0].lastStatus' \
+        --output text)
+      
+      echo "Task Status: $TASK_STATUS"
+      
+      # Check if task succeeded
+      if [ "$TASK_STATUS" = "STOPPED" ]; then
+        EXIT_CODE=$(aws ecs describe-tasks \
+          --cluster ${aws_ecs_cluster.main.name} \
+          --tasks $TASK_ARN \
+          --region ${data.aws_region.current.name} \
+          --query 'tasks[0].containers[0].exitCode' \
+          --output text)
+        
+        echo "Container Exit Code: $EXIT_CODE"
+        
+        if [ "$EXIT_CODE" = "0" ]; then
+          echo "=== Database Initialization SUCCESSFUL ==="
+          echo "Timestamp: $(date)"
+          echo "Check CloudWatch logs at: /aws/ecs/${local.project_name}/db-init"
+        else
+          echo "=== Database Initialization FAILED ==="
+          echo "Timestamp: $(date)"
+          echo "Exit Code: $EXIT_CODE"
+          echo "Check CloudWatch logs at: /aws/ecs/${local.project_name}/db-init"
+          exit 1
+        fi
+      else
+        echo "=== Database Initialization FAILED ==="
+        echo "Timestamp: $(date)"
+        echo "Task did not complete properly. Status: $TASK_STATUS"
+        echo "Check CloudWatch logs at: /aws/ecs/${local.project_name}/db-init"
+        exit 1
+      fi
     EOT
   }
 }

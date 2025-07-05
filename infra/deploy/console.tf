@@ -54,7 +54,21 @@ data "aws_iam_policy_document" "console_s3_policy_doc" {
     ]
     resources = [
       data.aws_s3_bucket.existing.arn,
-      "${data.aws_s3_bucket.existing.arn}/*"
+      "${data.aws_s3_bucket.existing.arn}/upload/*",
+      "${data.aws_s3_bucket.existing.arn}/sources/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:*:log-group:/aws/ec2/console-test:*"
     ]
   }
 }
@@ -74,6 +88,16 @@ resource "aws_iam_instance_profile" "console_s3_profile" {
   role = aws_iam_role.console_s3_role.name
 }
 
+# CloudWatch Log Group for EC2 Console Instance
+resource "aws_cloudwatch_log_group" "ec2_console" {
+  name              = "/aws/ec2/console-test"
+  retention_in_days = 7
+
+  tags = {
+    Name = "${local.prefix}-ec2-console-logs"
+  }
+}
+
 resource "aws_instance" "console_test" {
   ami                         = local.ami_image_id
   instance_type               = "t3.medium"
@@ -82,39 +106,17 @@ resource "aws_instance" "console_test" {
   associate_public_ip_address = false
   iam_instance_profile        = aws_iam_instance_profile.console_s3_profile.name
 
-  user_data = <<-EOF
-    #!/bin/bash
-    set -e
-    
-    # Install EC2 Instance Connect agent
-    echo "Installing EC2 Instance Connect agent..."
-    yum update -y
-    yum install -y ec2-instance-connect
-    
-    # Enable and start the EC2 Instance Connect service
-    echo "Enabling and starting EC2 Instance Connect service..."
-    systemctl enable ec2-instance-connect
-    systemctl start ec2-instance-connect
-    
-    # Verify the service is running
-    echo "Verifying EC2 Instance Connect service status..."
-    systemctl status ec2-instance-connect || echo "Service status check failed, but continuing..."
-    
-    # Set up environment variables
-    cat <<EOT > /etc/profile.d/terraform_env.sh
-    export PREFIX="${local.prefix}"
-    export CLOUDFRONT_URL="${local.cloudfront_url}"
-    export S3_BUCKET_NAME="${local.s3_bucket_name}"
-    export ECR_LAMBDA_MD5_IMAGE="${local.ecr_lambda_md5_image}"
-    export PROJECT_NAME="${local.project_name}"
-    export DB_USERNAME="${local.db_username}"
-    export DB_NAME="${local.db_name}"
-    export DB_PASSWORD="${local.db_password}"
-    export DB_HOST="${local.db_host}"
-    EOT
-    
-    echo "EC2 Instance Connect agent installation completed"
-  EOF
+  user_data = templatefile("${path.module}/scripts/ec2-user-data.sh", {
+    PREFIX               = local.prefix
+    CLOUDFRONT_URL       = local.cloudfront_url
+    S3_BUCKET_NAME       = local.s3_bucket_name
+    ECR_LAMBDA_MD5_IMAGE = local.ecr_lambda_md5_image
+    PROJECT_NAME         = local.project_name
+    DB_USERNAME          = local.db_username
+    DB_NAME              = local.db_name
+    DB_PASSWORD          = local.db_password
+    DB_HOST              = local.db_host
+  })
 
   tags = {
     Name = "console-test-ec2"
