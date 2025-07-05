@@ -167,7 +167,7 @@ output "db_identifier" {
 resource "aws_ecs_task_definition" "db_init" {
   family                   = "${local.prefix}-db-init"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = 256
+  cpu                      = 128
   network_mode             = "awsvpc"
   memory                   = 512
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
