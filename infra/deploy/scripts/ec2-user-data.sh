@@ -21,10 +21,18 @@ systemctl status ec2-instance-connect || echo "Service status check failed, but 
 echo "Installing CloudWatch agent..."
 yum install -y amazon-cloudwatch-agent
 
+# Get instance ID for log stream naming
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+echo "Instance ID: $INSTANCE_ID"
+
 # Configure CloudWatch agent
 echo "Configuring CloudWatch agent..."
-cat > /opt/aws/amazon-cloudwatch-agent/bin/config.json <<'CONFIG'
+cat > /opt/aws/amazon-cloudwatch-agent/bin/config.json <<CONFIG
 {
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "cwagent"
+  },
   "logs": {
     "logs_collected": {
       "files": {
@@ -32,25 +40,33 @@ cat > /opt/aws/amazon-cloudwatch-agent/bin/config.json <<'CONFIG'
           {
             "file_path": "/var/log/messages",
             "log_group_name": "/aws/ec2/console-test",
-            "log_stream_name": "{instance_id}",
-            "timezone": "UTC"
+            "log_stream_name": "$INSTANCE_ID-messages",
+            "timezone": "UTC",
+            "timestamp_format": "%b %d %H:%M:%S"
           },
           {
             "file_path": "/var/log/secure",
             "log_group_name": "/aws/ec2/console-test",
-            "log_stream_name": "{instance_id}-secure",
-            "timezone": "UTC"
+            "log_stream_name": "$INSTANCE_ID-secure",
+            "timezone": "UTC",
+            "timestamp_format": "%b %d %H:%M:%S"
           },
           {
             "file_path": "/var/log/cloud-init.log",
             "log_group_name": "/aws/ec2/console-test",
-            "log_stream_name": "{instance_id}-cloud-init",
+            "log_stream_name": "$INSTANCE_ID-cloud-init",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/cloud-init-output.log",
             "log_group_name": "/aws/ec2/console-test",
-            "log_stream_name": "{instance_id}-cloud-init-output",
+            "log_stream_name": "$INSTANCE_ID-cloud-init-output",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/amazon/ssm/amazon-ssm-agent.log",
+            "log_group_name": "/aws/ec2/console-test",
+            "log_stream_name": "$INSTANCE_ID-ssm-agent",
             "timezone": "UTC"
           }
         ]
@@ -66,6 +82,15 @@ echo "Starting CloudWatch agent..."
 systemctl enable amazon-cloudwatch-agent
 systemctl start amazon-cloudwatch-agent
 
+# Verify CloudWatch agent is running
+echo "Verifying CloudWatch agent status..."
+sleep 10
+systemctl status amazon-cloudwatch-agent || echo "CloudWatch agent status check failed, but continuing..."
+
+# Test log writing
+echo "Testing CloudWatch log writing..."
+echo "Test log entry from EC2 instance initialization - $(date)" >> /var/log/messages
+
 # Set up environment variables
 echo "Setting up environment variables..."
 cat <<EOT > /etc/profile.d/terraform_env.sh
@@ -80,4 +105,6 @@ export DB_PASSWORD="${DB_PASSWORD}"
 export DB_HOST="${DB_HOST}"
 EOT
 
-echo "EC2 instance initialization completed successfully!" 
+echo "EC2 instance initialization completed successfully!"
+echo "CloudWatch logs should be available at: /aws/ec2/console-test"
+echo "Instance ID: $INSTANCE_ID" 
