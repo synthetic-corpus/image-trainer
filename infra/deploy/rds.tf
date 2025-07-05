@@ -250,13 +250,6 @@ resource "aws_ecs_task_definition" "db_init" {
 resource "null_resource" "db_init" {
   depends_on = [aws_db_instance.main]
 
-  triggers = {
-    # Re-run if database endpoint changes
-    db_endpoint = aws_db_instance.main.endpoint
-    # Re-run if initialization script changes
-    init_script_hash = filemd5("${path.module}/scripts/init-database.sql")
-  }
-
   provisioner "local-exec" {
     command = <<-EOT
       echo "=== Starting Database Initialization Task ==="

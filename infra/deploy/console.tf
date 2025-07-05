@@ -71,6 +71,16 @@ data "aws_iam_policy_document" "console_s3_policy_doc" {
       "arn:aws:logs:${data.aws_region.current.name}:*:log-group:/aws/ec2/console-test:*"
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeVolumes",
+      "ec2:DescribeTags",
+      "logs:PutRetentionPolicy"
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "console_s3_policy" {
