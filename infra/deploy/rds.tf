@@ -176,7 +176,7 @@ resource "aws_ecs_task_definition" "db_init" {
   container_definitions = jsonencode([
     {
       name              = "db-init"
-      image             = "postgres:15"
+      image             = "ubuntu:22.04"
       essential         = true
       memoryReservation = 256
 
@@ -186,24 +186,54 @@ resource "aws_ecs_task_definition" "db_init" {
           set -e
           echo "=== Database Initialization Started ==="
           echo "Timestamp: $(date)"
-          echo "Database Host: $DB_HOST"
-          echo "Database Name: $DB_NAME"
-          echo "Database User: $DB_USER"
+          echo "Container started successfully!"
+          echo "Environment variables:"
+          echo "  DB_HOST: $DB_HOST"
+          echo "  DB_NAME: $DB_NAME"
+          echo "  DB_USER: $DB_USER"
+          echo "  DB_PASSWORD: [REDACTED]"
+          echo "Current working directory: $(pwd)"
+          echo "Available commands:"
+          echo "  which psql: $(which psql 2>/dev/null || echo 'psql not found')"
+          echo "  which apt-get: $(which apt-get)"
+          
+          # Install PostgreSQL client
+          echo "Installing PostgreSQL client..."
+          apt-get update && apt-get install -y postgresql-client
+          echo "PostgreSQL client installation completed"
+          echo "psql version: $(psql --version)"
+          
           echo "Testing database connection..."
+          echo "Attempting to connect to: $DB_HOST:$DB_NAME as user: $DB_USER"
           
           # Test connection first
-          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "SELECT version();" || {
+          if PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "SELECT version();"; then
+            echo "Database connection successful!"
+          else
             echo "ERROR: Failed to connect to database"
+            echo "Connection details:"
+            echo "  Host: $DB_HOST"
+            echo "  Database: $DB_NAME"
+            echo "  User: $DB_USER"
+            echo "  Port: 5432 (default)"
             exit 1
-          }
+          fi
           
-          echo "Database connection successful!"
           echo "Writing initialization script..."
-          echo '${file("${path.module}/scripts/init-database.sql")}' > /tmp/init-database.sql
+          cat > /tmp/init-database.sql << 'SQL_SCRIPT'
+          ${file("${path.module}/scripts/init-database.sql")}
+          SQL_SCRIPT
+          echo "Initialization script written to /tmp/init-database.sql"
+          echo "Script size: $(wc -l < /tmp/init-database.sql) lines"
           echo "Running database initialization script..."
           
           # Run the initialization script
-          PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f /tmp/init-database.sql
+          if PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f /tmp/init-database.sql; then
+            echo "Database initialization script executed successfully"
+          else
+            echo "ERROR: Database initialization script failed"
+            exit 1
+          fi
           
           echo "=== Database Initialization Completed Successfully ==="
           echo "Timestamp: $(date)"
