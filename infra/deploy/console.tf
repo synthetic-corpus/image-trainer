@@ -84,6 +84,23 @@ resource "aws_instance" "console_test" {
 
   user_data = <<-EOF
     #!/bin/bash
+    set -e
+    
+    # Install EC2 Instance Connect agent
+    echo "Installing EC2 Instance Connect agent..."
+    yum update -y
+    yum install -y ec2-instance-connect
+    
+    # Enable and start the EC2 Instance Connect service
+    echo "Enabling and starting EC2 Instance Connect service..."
+    systemctl enable ec2-instance-connect
+    systemctl start ec2-instance-connect
+    
+    # Verify the service is running
+    echo "Verifying EC2 Instance Connect service status..."
+    systemctl status ec2-instance-connect || echo "Service status check failed, but continuing..."
+    
+    # Set up environment variables
     cat <<EOT > /etc/profile.d/terraform_env.sh
     export PREFIX="${local.prefix}"
     export CLOUDFRONT_URL="${local.cloudfront_url}"
@@ -95,6 +112,8 @@ resource "aws_instance" "console_test" {
     export DB_PASSWORD="${local.db_password}"
     export DB_HOST="${local.db_host}"
     EOT
+    
+    echo "EC2 Instance Connect agent installation completed"
   EOF
 
   tags = {
