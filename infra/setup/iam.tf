@@ -60,10 +60,23 @@ resource "aws_iam_policy" "tf_backend_policy" {
   policy      = data.aws_iam_policy_document.tf_backend_document.json
 }
 
-# This attaches the policy to the user
-resource "aws_iam_user_policy_attachment" "attach_policy" {
-  user       = aws_iam_user.cd.name
-  policy_arn = aws_iam_policy.tf_backend_policy.arn
+##########################################################
+# IAM Groups for different service groups                #
+##########################################################
+
+# Core Infrastructure Group (EC2, VPC, ECS, Lambda)
+resource "aws_iam_group" "infrastructure" {
+  name = "${var.project}-infrastructure-group"
+}
+
+# Application Services Group (ALB, RDS, ECR, CloudFront)
+resource "aws_iam_group" "application_services" {
+  name = "${var.project}-application-services-group"
+}
+
+# Management Group (IAM, EventBridge, Route53, ACM)
+resource "aws_iam_group" "management" {
+  name = "${var.project}-management-group"
 }
 
 ##########################################################
@@ -71,7 +84,7 @@ resource "aws_iam_user_policy_attachment" "attach_policy" {
 ##########################################################
 
 ###############################
-# Consolidated Infrastructure Policy #
+# Core Infrastructure Policy #
 ###############################
 
 data "aws_iam_policy_document" "infrastructure" {
@@ -183,7 +196,7 @@ data "aws_iam_policy_document" "infrastructure" {
       "iam:ListRoleTags",
       "iam:TagInstanceProfile",
       "iam:UntagInstanceProfile",
-      "iam:ListInstanceProfileTags",
+      "iam:ListInstanceProfileTags"
     ]
     resources = ["*"]
   }
@@ -263,76 +276,37 @@ data "aws_iam_policy_document" "infrastructure" {
     resources = ["*"]
   }
 
-  # CloudFront permissions
+  # CloudWatch Logs permissions
   statement {
     effect = "Allow"
     actions = [
-      "cloudfront:CreateDistribution",
-      "cloudfront:DeleteDistribution",
-      "cloudfront:GetDistribution",
-      "cloudfront:GetDistributionConfig",
-      "cloudfront:UpdateDistribution",
-      "cloudfront:ListDistributions",
-      "cloudfront:TagResource",
-      "cloudfront:UntagResource",
-      "cloudfront:ListTagsForResource",
-      "cloudfront:CreateCachePolicy",
-      "cloudfront:DeleteCachePolicy",
-      "cloudfront:GetCachePolicy",
-      "cloudfront:UpdateCachePolicy",
-      "cloudfront:ListCachePolicies",
-      "cloudfront:CreateOriginRequestPolicy",
-      "cloudfront:DeleteOriginRequestPolicy",
-      "cloudfront:GetOriginRequestPolicy",
-      "cloudfront:UpdateOriginRequestPolicy",
-      "cloudfront:ListOriginRequestPolicies",
-      "cloudfront:CreateOriginAccessControl",
-      "cloudfront:DeleteOriginAccessControl",
-      "cloudfront:GetOriginAccessControl",
-      "cloudfront:UpdateOriginAccessControl",
-      "cloudfront:ListOriginAccessControls",
-      "cloudfront:CreateFieldLevelEncryptionConfig",
-      "cloudfront:DeleteFieldLevelEncryptionConfig",
-      "cloudfront:GetFieldLevelEncryptionConfig",
-      "cloudfront:UpdateFieldLevelEncryptionConfig",
-      "cloudfront:ListFieldLevelEncryptionConfigs",
-      "cloudfront:CreateFieldLevelEncryptionProfile",
-      "cloudfront:DeleteFieldLevelEncryptionProfile",
-      "cloudfront:GetFieldLevelEncryptionProfile",
-      "cloudfront:UpdateFieldLevelEncryptionProfile",
-      "cloudfront:ListFieldLevelEncryptionProfiles",
-      "cloudfront:GetInvalidation",
-      "cloudfront:CreateInvalidation",
-      "cloudfront:ListInvalidations",
-      "cloudfront:GetStreamingDistribution",
-      "cloudfront:GetStreamingDistributionConfig",
-      "cloudfront:ListStreamingDistributions"
+      "logs:DeleteLogGroup",
+      "logs:DescribeLogGroups",
+      "logs:CreateLogGroup",
+      "logs:TagResource",
+      "logs:ListTagsLogGroup",
+      "logs:PutRetentionPolicy"
     ]
     resources = ["*"]
-  }
-
-  # S3 permissions for CloudFront
-  statement {
-    effect = "Allow"
-    actions = [
-      "s3:GetBucketPolicy",
-      "s3:PutBucketPolicy",
-      "s3:DeleteBucketPolicy",
-      "s3:ListBucket"
-    ]
-    resources = ["${local.s3_bucket_arn}"]
   }
 }
 
 resource "aws_iam_policy" "infrastructure" {
   name        = "${aws_iam_user.cd.name}-infrastructure"
-  description = "Allow user to manage infrastructure resources (EC2, ECS, ELB, Lambda, CloudFront)."
+  description = "Allow user to manage EC2, VPC, ECS, Lambda, and CloudWatch resources."
   policy      = data.aws_iam_policy_document.infrastructure.json
 }
 
-resource "aws_iam_user_policy_attachment" "infrastructure" {
-  user       = aws_iam_user.cd.name
+# Attach infrastructure policy to infrastructure group
+resource "aws_iam_group_policy_attachment" "infrastructure" {
+  group      = aws_iam_group.infrastructure.name
   policy_arn = aws_iam_policy.infrastructure.arn
+}
+
+# Attach Terraform backend policy to infrastructure group
+resource "aws_iam_group_policy_attachment" "tf_backend" {
+  group      = aws_iam_group.infrastructure.name
+  policy_arn = aws_iam_policy.tf_backend_policy.arn
 }
 
 #########################
@@ -375,8 +349,8 @@ resource "aws_iam_policy" "alb" {
   policy      = data.aws_iam_policy_document.alb.json
 }
 
-resource "aws_iam_user_policy_attachment" "alb" {
-  user       = aws_iam_user.cd.name
+resource "aws_iam_group_policy_attachment" "alb" {
+  group      = aws_iam_group.application_services.name
   policy_arn = aws_iam_policy.alb.arn
 }
 
@@ -458,8 +432,8 @@ resource "aws_iam_policy" "autoscaling" {
   policy      = data.aws_iam_policy_document.autoscaling.json
 }
 
-resource "aws_iam_user_policy_attachment" "autoscaling" {
-  user       = aws_iam_user.cd.name
+resource "aws_iam_group_policy_attachment" "autoscaling" {
+  group      = aws_iam_group.application_services.name
   policy_arn = aws_iam_policy.autoscaling.arn
 }
 
@@ -513,8 +487,8 @@ resource "aws_iam_policy" "rds" {
   policy      = data.aws_iam_policy_document.rds.json
 }
 
-resource "aws_iam_user_policy_attachment" "rds" {
-  user       = aws_iam_user.cd.name
+resource "aws_iam_group_policy_attachment" "rds" {
+  group      = aws_iam_group.application_services.name
   policy_arn = aws_iam_policy.rds.arn
 }
 
@@ -561,12 +535,12 @@ data "aws_iam_policy_document" "ecr" {
 
 resource "aws_iam_policy" "ecr" {
   name        = "${aws_iam_user.cd.name}-ecr"
-  description = "Allow user to push and pull images to/from specific ECR repositories."
+  description = "Allow user to manage ECR repositories and images."
   policy      = data.aws_iam_policy_document.ecr.json
 }
 
-resource "aws_iam_user_policy_attachment" "ecr" {
-  user       = aws_iam_user.cd.name
+resource "aws_iam_group_policy_attachment" "ecr" {
+  group      = aws_iam_group.application_services.name
   policy_arn = aws_iam_policy.ecr.arn
 }
 
@@ -640,8 +614,8 @@ resource "aws_iam_policy" "cloudfront" {
   policy      = data.aws_iam_policy_document.cloudfront.json
 }
 
-resource "aws_iam_user_policy_attachment" "cloudfront" {
-  user       = aws_iam_user.cd.name
+resource "aws_iam_group_policy_attachment" "cloudfront" {
+  group      = aws_iam_group.application_services.name
   policy_arn = aws_iam_policy.cloudfront.arn
 }
 
@@ -698,39 +672,34 @@ resource "aws_iam_policy" "iam_management" {
   policy      = data.aws_iam_policy_document.iam_management.json
 }
 
-resource "aws_iam_user_policy_attachment" "iam_management" {
-  user       = aws_iam_user.cd.name
+resource "aws_iam_group_policy_attachment" "iam_management" {
+  group      = aws_iam_group.management.name
   policy_arn = aws_iam_policy.iam_management.arn
 }
 
-################################
-# Policy for CloudWatch access #
-################################
+#########################
+# EventBridge Policy    #
+#########################
 
-data "aws_iam_policy_document" "logs" {
+data "aws_iam_policy_document" "eventbridge" {
   statement {
     effect = "Allow"
     actions = [
-      "logs:DeleteLogGroup",
-      "logs:DescribeLogGroups",
-      "logs:CreateLogGroup",
-      "logs:TagResource",
-      "logs:ListTagsLogGroup",
-      "logs:PutRetentionPolicy"
+      "events:*"
     ]
     resources = ["*"]
   }
 }
 
-resource "aws_iam_policy" "logs" {
-  name        = "${aws_iam_user.cd.name}-logs"
-  description = "Allow user to manage CloudWatch resources."
-  policy      = data.aws_iam_policy_document.logs.json
+resource "aws_iam_policy" "eventbridge" {
+  name        = "${aws_iam_user.cd.name}-eventbridge"
+  description = "Allow user to manage EventBridge resources with full permissions."
+  policy      = data.aws_iam_policy_document.eventbridge.json
 }
 
-resource "aws_iam_user_policy_attachment" "logs" {
-  user       = aws_iam_user.cd.name
-  policy_arn = aws_iam_policy.logs.arn
+resource "aws_iam_group_policy_attachment" "eventbridge" {
+  group      = aws_iam_group.management.name
+  policy_arn = aws_iam_policy.eventbridge.arn
 }
 
 ################################
@@ -784,7 +753,29 @@ resource "aws_iam_policy" "route53_acm_read" {
   policy      = data.aws_iam_policy_document.route53_acm_read.json
 }
 
-resource "aws_iam_user_policy_attachment" "route53_acm_read" {
-  user       = aws_iam_user.cd.name
+resource "aws_iam_group_policy_attachment" "route53_acm_read" {
+  group      = aws_iam_group.management.name
   policy_arn = aws_iam_policy.route53_acm_read.arn
+}
+
+##########################################################
+# Attach groups to the user                               #
+##########################################################
+
+# Attach infrastructure group to user
+resource "aws_iam_user_group_membership" "user_infrastructure_group" {
+  user   = aws_iam_user.cd.name
+  groups = [aws_iam_group.infrastructure.name]
+}
+
+# Attach application services group to user
+resource "aws_iam_user_group_membership" "user_application_services_group" {
+  user   = aws_iam_user.cd.name
+  groups = [aws_iam_group.application_services.name]
+}
+
+# Attach management group to user
+resource "aws_iam_user_group_membership" "user_management_group" {
+  user   = aws_iam_user.cd.name
+  groups = [aws_iam_group.management.name]
 }

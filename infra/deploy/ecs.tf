@@ -115,9 +115,9 @@ resource "aws_ecs_cluster" "main" {
 resource "aws_ecs_task_definition" "web" {
   family                   = "${local.prefix}-web"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = 512
+  cpu                      = 1024
   network_mode             = "awsvpc"
-  memory                   = 1024
+  memory                   = 2048
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn # List of policies of what ecs can do.
   task_role_arn            = aws_iam_role.ecs_task_execution_role.arn # allows for the asumption of polices above.
 
@@ -127,7 +127,8 @@ resource "aws_ecs_task_definition" "web" {
         name              = "web"
         image             = var.ecr_app_image
         essential         = true
-        memoryReservation = 256
+        memoryReservation = 1024
+        cpu               = 512
         user              = "www-data"
         portMappings = [
           {
@@ -178,7 +179,8 @@ resource "aws_ecs_task_definition" "web" {
         name              = "proxy"
         image             = var.ecr_proxy_image
         essential         = true
-        memoryReservation = 256
+        memoryReservation = 512
+        cpu               = 256
         user              = "nginx"
         portMappings = [
           {
@@ -216,6 +218,14 @@ resource "aws_ecs_task_definition" "web" {
     operating_system_family = "LINUX"
     cpu_architecture        = "X86_64" # must match what the docker is built for!
   }
+
+  depends_on = [
+    aws_db_instance.main,
+    aws_lambda_function.init_db,
+    aws_cloudwatch_event_rule.rds_db_created,
+    aws_cloudwatch_event_target.init_db_lambda,
+    aws_lambda_permission.eventbridge_invoke
+  ]
 }
 
 resource "aws_security_group" "ecs_service" {
@@ -269,7 +279,11 @@ resource "aws_ecs_service" "web" {
   enable_execute_command = true
 
   depends_on = [
-    aws_db_instance.main
+    aws_db_instance.main,
+    aws_lambda_function.init_db,
+    aws_cloudwatch_event_rule.rds_db_created,
+    aws_cloudwatch_event_target.init_db_lambda,
+    aws_lambda_permission.eventbridge_invoke
   ]
 
   network_configuration {
