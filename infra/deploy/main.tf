@@ -46,7 +46,7 @@ locals {
 
   # Database host/endpoint (everything after @ in connection string)
   db_host      = "${aws_db_instance.main.endpoint}/${local.db_name}"
-  ami_image_id = "ami-03165efb4425606ee" # my custom AMI! 
+  ami_image_id = "ami-05ee755be0cd7555c" # basic Amazon Linux AMI 
 }
 
 data "aws_region" "current" {}
