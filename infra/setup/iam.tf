@@ -174,6 +174,16 @@ data "aws_iam_policy_document" "infrastructure" {
       "iam:DeleteRolePolicy",
       "iam:GetPolicy",
       "iam:ListPolicies",
+      "iam:CreateServiceLinkedRole",
+      "iam:DeleteServiceLinkedRole",
+      "iam:GetServiceLinkedRoleDeletionStatus",
+      "iam:ListServiceLinkedRoles",
+      "iam:TagRole",
+      "iam:UntagRole",
+      "iam:ListRoleTags",
+      "iam:TagInstanceProfile",
+      "iam:UntagInstanceProfile",
+      "iam:ListInstanceProfileTags",
     ]
     resources = ["*"]
   }
