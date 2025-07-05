@@ -182,7 +182,7 @@ resource "aws_ecs_task_definition" "db_init" {
 
       command = [
         "sh", "-c",
-        "echo '${file("${path.module}/scripts/init-database.sql")}' > /tmp/init-database.sql && PGPASSWORD=$$DB_PASSWORD psql -h $$DB_HOST -U $$DB_USER -d $$DB_NAME -f /tmp/init-database.sql"
+        "echo '${file("${path.module}/scripts/init-database.sql")}' > /tmp/init-database.sql && PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f /tmp/init-database.sql"
       ]
 
       environment = [
