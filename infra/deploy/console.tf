@@ -4,11 +4,11 @@ resource "aws_security_group" "console_access" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description = "SSH from AWS Console"
+    description = "SSH from VPC (for EC2 Instance Connect Endpoint)"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["18.237.140.160/29"]
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   egress {
