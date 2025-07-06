@@ -155,7 +155,7 @@ echo "Python 3 and Pip 3 installation complete." >> /tmp/python_pip_install.log
 
 # Install PostgreSQL client
 echo "Installing PostgreSQL client..." >> /tmp/postgresql_install.log
-yum install -y postgresql-devel >> /tmp/postgresql_install.log 2>&1
+sudo dnf install postgresql15 -y >> /tmp/postgresql_install.log 2>&1
 echo "PostgreSQL client installation complete." >> /tmp/postgresql_install.log
 
 echo "DB_PASSWORD=${local.db_password}" > /tmp/config.txt
