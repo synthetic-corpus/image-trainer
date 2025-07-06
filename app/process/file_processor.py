@@ -274,6 +274,7 @@ def process_image_file(file_key):
             if session:
                 # Create new Image_table record
                 new_image = Image_table()
+                new_image.file_name = new_filename
 
                 session.add(new_image)
                 session.commit()
