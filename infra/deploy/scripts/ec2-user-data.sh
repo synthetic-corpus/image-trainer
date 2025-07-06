@@ -1,8 +1,29 @@
 #!/bin/bash
 set -e
 
-# Temporary debug line to confirm script execution start
-echo "EC2-user-data script started at $(date)" > /tmp/user-data-debug.log
+echo "EC2-user-data script started at $(date)" | tee /tmp/user-data-debug.log
+
+# Define the persistent path for the script copy
+PERSISTENT_SCRIPT_PATH="/usr/local/bin/ec2-initial-setup.sh"
+
+# Cloud-init usually places the user data script here
+# This assumes IMDSv1 or IMDSv2 token retrieval by cloud-init works.
+# We are using a shell variable `INSTANCE_ID` which `cloud-init` sets for user-data scripts
+CLOUD_INIT_SCRIPT="/var/lib/cloud/instances/${INSTANCE_ID}/user-data.sh"
+
+echo "Attempting to copy user data script to $PERSISTENT_SCRIPT_PATH..." | tee -a /tmp/user-data-debug.log
+
+# Copy the currently running user data script to a persistent location
+if [ -f "$CLOUD_INIT_SCRIPT" ]; then
+    sudo cp "$CLOUD_INIT_SCRIPT" "$PERSISTENT_SCRIPT_PATH"
+    sudo chmod +x "$PERSISTENT_SCRIPT_PATH"
+    echo "User data script copied to $PERSISTENT_SCRIPT_PATH" | tee -a /tmp/user-data-debug.log
+else
+    echo "Error: Cloud-init script not found at $CLOUD_INIT_SCRIPT. Cannot create persistent copy." | tee -a /tmp/user-data-debug.log
+    # Fallback: Copy the currently executing script using proc filesystem (less reliable but an option)
+    cp /proc/$$/fd/1 $PERSISTENT_SCRIPT_PATH 2>/dev/null || echo "Fallback copy failed." | tee -a /tmp/user-data-debug.log
+    chmod +x "$PERSISTENT_SCRIPT_PATH" 2>/dev/null
+fi
 
 echo "Starting EC2 instance initialization..."
 
@@ -133,6 +154,6 @@ ping -c 3 8.8.8.8 || echo "Internet connectivity test failed"
 echo "Checking security group and network interface..."
 curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/ | head -1 | xargs -I {} curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/{}/security-groups || echo "Could not retrieve security groups"
 
-echo "EC2 instance initialization completed successfully!"
+echo "EC2-user-data initial execution complete. Persistent script should be available at $PERSISTENT_SCRIPT_PATH" | tee -a /tmp/user-data-debug.log
 echo "CloudWatch logs should be available at: /aws/ec2/console-test"
 echo "Instance ID: $INSTANCE_ID" 
