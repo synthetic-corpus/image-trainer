@@ -63,14 +63,15 @@ def get_db_session():
 
         # Create connection string
         connection_string = f"postgresql://{db_user}:{db_password}@{db_host}"  # noqa: E501, E231
+        hidden_string = f"postgresql://{db_user}:{password_hidden}@{db_host}"  # noqa: E501, E231
 
         try:
             db_engine = create_engine(connection_string)
             Session = sessionmaker(bind=db_engine)
             db_session = Session()
-            logger.info("Database connection established")
+            logger.info(f"{hidden_string} \
+                        Database connection established")
         except Exception as e:
-            hidden_string = f"postgresql://{db_user}:{password_hidden}@{db_host}"  # noqa: E501, E231
             logger.error(f"Failed to establish database connection: {e} \
                          Connect with {hidden_string}")
             return None
