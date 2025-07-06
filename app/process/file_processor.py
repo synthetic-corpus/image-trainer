@@ -51,18 +51,18 @@ def get_db_session():
     if db_engine is None:
         # Get database connection parameters from environment
         db_host = os.environ.get('DB_HOST')
-        db_port = os.environ.get('DB_PORT', '5432')
+        # db_port = os.environ.get('DB_PORT', '5432')
         db_name = os.environ.get('DB_NAME')
         db_user = os.environ.get('DB_USER')
         db_password = os.environ.get('DB_PASSWORD')
+        password_hidden = '{db_password[:4]}******'
 
         if not all([db_host, db_name, db_user, db_password]):
             logger.error("Database environment variables not set")
             return None
 
         # Create connection string
-        connection_string = f"postgresql://{db_user}:{db_password}\
-            @{db_host}:{db_port}/{db_name}"  # noqa: E231
+        connection_string = f"postgresql://{db_user}:{db_password}@{db_host}"  # noqa: E501, E231
 
         try:
             db_engine = create_engine(connection_string)
@@ -70,7 +70,9 @@ def get_db_session():
             db_session = Session()
             logger.info("Database connection established")
         except Exception as e:
-            logger.error(f"Failed to establish database connection: {e}")
+            hidden_string = f"postgresql://{db_user}:{password_hidden}@{db_host}"  # noqa: E501, E231
+            logger.error(f"Failed to establish database connection: {e} \
+                         Connect with {hidden_string}")
             return None
 
     return db_session
