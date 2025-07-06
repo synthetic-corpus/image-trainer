@@ -183,7 +183,7 @@ resource "aws_lambda_function" "processor" {
     variables = {
       S3_BUCKET_NAME = local.s3_bucket_name
       ENVIRONMENT    = var.environment
-      DB_HOST        = aws_db_instance.main.endpoint
+      DB_HOST        = local.db_host
       DB_PORT        = "5432"
       DB_NAME        = local.db_name
       DB_USER        = local.db_username
