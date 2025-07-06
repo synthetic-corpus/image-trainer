@@ -57,7 +57,9 @@ data "aws_iam_policy_document" "lambda_logs_policy" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${local.project_name}/*"]
+    resources = [
+      "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${local.project_name}/*",
+    "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda*"]
   }
 }
 
