@@ -520,7 +520,8 @@ data "aws_iam_policy_document" "ecr" {
       "arn:aws:ecr:*:*:repository/web-app",
       "arn:aws:ecr:*:*:repository/web-proxy",
       "arn:aws:ecr:*:*:repository/hash-lambda",
-      "arn:aws:ecr:*:*:repository/numpy-convert"
+      "arn:aws:ecr:*:*:repository/numpy-convert",
+      "arn:aws:ecr:*:*:repository/init-db"
     ]
   }
 

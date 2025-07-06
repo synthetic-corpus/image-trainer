@@ -15,9 +15,9 @@ def get_db_connection_string():
     db_name = os.environ['DB_NAME']
     db_user = os.environ['DB_USER']
     db_password = os.environ['DB_PASSWORD']
-    db_port = os.environ.get('DB_PORT', '5432')
+    # db_port = os.environ.get('DB_PORT', '5432')
 
-    return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"  # noqa: E501, E231
+    return f"postgresql://{db_user}:{db_password}@{db_host}/{db_name}"  # noqa: E501, E231
 
 
 def check_table_exists(engine, table_name):
