@@ -29,6 +29,15 @@ resource "aws_security_group" "console_access" {
     description = "Allow all outbound traffic"
   }
 
+  # Explicitly allow outbound access to EC2 Instance Metadata Service (IMDS)
+  egress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["169.254.169.254/32"]
+    description = "Allow outbound HTTP to IMDS"
+  }
+
   tags = {
     Name = "console-ssh-access"
   }
