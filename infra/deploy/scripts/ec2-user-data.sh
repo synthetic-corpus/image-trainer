@@ -2,7 +2,7 @@
 set -e
 
 # Temporary debug line to confirm script execution start
-echo "EC2 user data script started at $(date)" > /tmp/user-data-debug.log
+echo "EC2-user-data script started at $(date)" > /tmp/user-data-debug.log
 
 echo "Starting EC2 instance initialization..."
 
@@ -112,19 +112,6 @@ aws logs put-log-events \
   --log-events timestamp=$(date +%s)000,message="Manual test log entry from EC2 instance - $(date)" \
   --region $(curl -s http://169.254.169.254/latest/meta-data/placement/region) || echo "Direct CloudWatch log writing failed"
 
-# Set up environment variables
-echo "Setting up environment variables..."
-cat <<EOT > /etc/profile.d/terraform_env.sh
-export PREFIX="${PREFIX}"
-export CLOUDFRONT_URL="${CLOUDFRONT_URL}"
-export S3_BUCKET_NAME="${S3_BUCKET_NAME}"
-export ECR_LAMBDA_MD5_IMAGE="${ECR_LAMBDA_MD5_IMAGE}"
-export PROJECT_NAME="${PROJECT_NAME}"
-export DB_USERNAME="${DB_USERNAME}"
-export DB_NAME="${DB_NAME}"
-export DB_PASSWORD="${DB_PASSWORD}"
-export DB_HOST="${DB_HOST}"
-EOT
 
 # Additional EC2 Instance Connect debugging
 echo "EC2 Instance Connect debugging information:"
