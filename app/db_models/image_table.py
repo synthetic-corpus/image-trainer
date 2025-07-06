@@ -29,6 +29,13 @@ class Image_table(db.Model):
     __tablename__ = 'images'
     __table_args__ = {'extend_existing': True}
 
+    # Explicitly define columns for SQLAlchemy ORM
+    id = db.Column(db.Integer, primary_key=True)
+    file_name = db.Column(db.String(255), unique=True, nullable=False)
+    is_masc_human = db.Column(db.Boolean, nullable=True)
+    is_masc_prediction = db.Column(db.Boolean, nullable=True)
+    hash = db.Column(db.String(255), nullable=False)
+
     def __init__(self, *args, **kwargs):
         """Initialize the Image model with an empty randoms list."""
         super().__init__(*args, **kwargs)
