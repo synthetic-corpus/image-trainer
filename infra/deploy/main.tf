@@ -43,7 +43,7 @@ locals {
   # Database connection details
   db_username = var.db_username
   db_name     = var.db_name
-  db_password = "TEMPORARY_NON_SENSITIVE_PASSWORD" # Temporarily hardcoded for debugging user_data visibility
+  db_password = sensitive(var.db_password)
 
   # Database host/endpoint (everything after @ in connection string)
   db_host      = "${aws_db_instance.main.endpoint}/${local.db_name}"
