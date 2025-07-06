@@ -247,3 +247,90 @@ resource "aws_route_table_association" "private_nat" {
   subnet_id      = aws_subnet.private_nat.id
   route_table_id = aws_route_table.private_nat.id
 }
+
+# --- New Network ACL for Private NAT Subnet ---
+resource "aws_network_acl" "private_nat_nacl" {
+  vpc_id     = aws_vpc.main.id
+  subnet_ids = [aws_subnet.private_nat.id]
+
+  tags = {
+    Name = "${local.prefix}-private-nat-nacl"
+  }
+}
+
+# Inbound rules for Private NAT NACL
+resource "aws_network_acl_rule" "private_nat_inbound_ssh_vpc" {
+  network_acl_id = aws_network_acl.private_nat_nacl.id
+  rule_number    = 100
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = aws_vpc.main.cidr_block
+  from_port      = 22
+  to_port        = 22
+  depends_on = [
+    aws_network_acl.private_nat_nacl
+  ]
+}
+
+resource "aws_network_acl_rule" "private_nat_inbound_ssh_ec2_connect" {
+  network_acl_id = aws_network_acl.private_nat_nacl.id
+  rule_number    = 110
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0" # For EC2 Instance Connect service
+  from_port      = 22
+  to_port        = 22
+  depends_on = [
+    aws_network_acl.private_nat_nacl
+  ]
+}
+
+resource "aws_network_acl_rule" "private_nat_inbound_ephemeral" {
+  network_acl_id = aws_network_acl.private_nat_nacl.id
+  rule_number    = 120
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 1024
+  to_port        = 65535
+  depends_on = [
+    aws_network_acl.private_nat_nacl
+  ]
+}
+
+# Outbound rules for Private NAT NACL
+resource "aws_network_acl_rule" "private_nat_outbound_http_imds" {
+  network_acl_id = aws_network_acl.private_nat_nacl.id
+  rule_number    = 100
+  egress         = true
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "169.254.169.254/32"
+  from_port      = 80
+  to_port        = 80
+  depends_on = [
+    aws_network_acl.private_nat_nacl
+  ]
+}
+
+resource "aws_network_acl_rule" "private_nat_outbound_all" {
+  network_acl_id = aws_network_acl.private_nat_nacl.id
+  rule_number    = 110
+  egress         = true
+  protocol       = "-1" # All protocols
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 0
+  to_port        = 0
+  depends_on = [
+    aws_network_acl.private_nat_nacl
+  ]
+}
+
+resource "aws_network_acl_association" "private_nat" {
+  subnet_id      = aws_subnet.private_nat.id
+  network_acl_id = aws_network_acl.private_nat_nacl.id
+}
