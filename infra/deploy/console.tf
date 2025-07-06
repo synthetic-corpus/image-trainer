@@ -156,6 +156,18 @@ EOF
   tags = {
     Name = "console-test-ec2"
   }
+
+  lifecycle {
+    replace_triggered_by = [null_resource.force_recreate_console_instance.id]
+  }
+}
+
+# This null_resource exists solely to force the replacement of the EC2 instance
+# every time terraform apply is run.
+resource "null_resource" "force_recreate_console_instance" {
+  triggers = {
+    always_recreate = timestamp()
+  }
 }
 
 resource "aws_ec2_instance_connect_endpoint" "public_endpoint" {
