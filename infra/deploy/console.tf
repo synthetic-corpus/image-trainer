@@ -3,8 +3,18 @@ resource "aws_security_group" "console_access" {
   description = "Allow SSH from AWS Console IP range for NAT subnet resources"
   vpc_id      = aws_vpc.main.id
 
+  # Allow SSH from AWS EC2 Instance Connect service
   ingress {
-    description = "SSH from VPC (for EC2 Instance Connect Endpoint)"
+    description = "SSH from AWS EC2 Instance Connect service"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow SSH from VPC for internal access
+  ingress {
+    description = "SSH from VPC for internal access"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -81,6 +91,16 @@ data "aws_iam_policy_document" "console_s3_policy_doc" {
     ]
     resources = ["*"]
   }
+
+  # EC2 Instance Connect permissions
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2-instance-connect:SendSSHPublicKey",
+      "ec2-instance-connect:SendSerialConsoleSSHPublicKey"
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "console_s3_policy" {
@@ -133,8 +153,8 @@ resource "aws_instance" "console_test" {
   }
 }
 
-resource "aws_ec2_instance_connect_endpoint" "private_nat" {
-  subnet_id          = aws_subnet.private_nat.id
+resource "aws_ec2_instance_connect_endpoint" "public_endpoint" {
+  subnet_id          = aws_subnet.public_a.id # EC2 Instance Connect endpoints must be in public subnets
   security_group_ids = [aws_security_group.console_access.id]
   tags = {
     Name = "${local.prefix}-ec2-instance-connect-endpoint"
