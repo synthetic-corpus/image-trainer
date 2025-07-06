@@ -155,6 +155,7 @@ resource "aws_instance" "console_test" {
     #DB_NAME              = local.db_name
     #DB_PASSWORD          = local.db_password
     #DB_HOST              = local.db_host
+    INSTANCE_ID          = aws_instance.console_test.id # Pass instance ID to user data script
   })
 
   tags = {
