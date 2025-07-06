@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Temporary debug line to confirm script execution start
+echo "EC2 user data script started at $(date)" > /tmp/user-data-debug.log
+
 echo "Starting EC2 instance initialization..."
 
 # Install EC2 Instance Connect agent
