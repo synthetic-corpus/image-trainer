@@ -32,6 +32,8 @@ except (ClientError, NoCredentialsError) as e:
     cloudfront_access = None
 
 app = Flask(__name__)
+db = SQLAlchemy()
+Image_table = None
 
 file_name_cache = []
 # Database configuration
@@ -46,6 +48,8 @@ logger.info(f"DB_NAME: {DB_NAME}")
 logger.info(f"DB_USER: {DB_USER}")
 if len(DB_PASSWORD) > 0:
     logger.info(f"DB_PASSWORD: {DB_PASSWORD[:4]}******")
+    logger.info(f"Database string: \
+                postgresql://{DB_USER}:{DB_PASSWORD[:4]}****@{DB_HOST}") # noqa
 else:
     logger.info("DB_PASSWORD: Not SET!")
 
@@ -55,7 +59,6 @@ if DB_HOST and DB_PASSWORD:
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    db = SQLAlchemy()
     db.init_app(app)
 
     # Import and initialize the Image model
@@ -70,10 +73,17 @@ else:
 
 
 def get_image_url_by_db() -> str:
+    if Image_table is None:
+        logger.warning("Database features disabled. Cannot get image from DB.")
+        raise RuntimeError("Flask, SQLAlchemy, etc aren't working")
+
     if len(file_name_cache) == 0:
-        next_batch = Image_table.get_random_classified()
+        next_batch = Image_table.get_random_unclassified()
         if len(next_batch) == 0:
-            next_batch = Image_table.get_random_unclassified()
+            logger.warn("We did not find any unclassifed images!")
+            next_batch = Image_table.get_random_classified()
+        if not next_batch:
+            raise RuntimeError("Could not find rows to classify or unclassify")
         for element in next_batch:
             file_name_cache.append(element.file_name)
     next_file = file_name_cache.pop()
