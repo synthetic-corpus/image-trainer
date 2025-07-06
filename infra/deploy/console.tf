@@ -147,10 +147,26 @@ resource "aws_instance" "console_test" {
 
   user_data = <<-EOF
 #!/bin/bash
+
+# Install Python 3 and Pip 3
+echo "Installing Python 3 and Pip 3..." > /tmp/python_pip_install.log
+yum install -y python3-pip >> /tmp/python_pip_install.log 2>&1
+echo "Python 3 and Pip 3 installation complete." >> /tmp/python_pip_install.log
+
+# Install PostgreSQL client
+echo "Installing PostgreSQL client..." >> /tmp/postgresql_install.log
+yum install -y postgresql-devel >> /tmp/postgresql_install.log 2>&1
+echo "PostgreSQL client installation complete." >> /tmp/postgresql_install.log
+
 echo "DB_PASSWORD=${local.db_password}" > /tmp/config.txt
 echo "DB_HOST=${local.db_host}" >> /tmp/config.txt
 echo "S3_BUCKET_NAME=${local.s3_bucket_name}" >> /tmp/config.txt
 echo "DB_USERNAME=${local.db_username}" >> /tmp/config.txt
+
+# Export variables from /tmp/config.txt as environment variables
+echo "Setting up environment variables for SSH users..." >> /tmp/env_setup.log
+( while IFS= read -r line; do echo "export $line"; done < /tmp/config.txt ) | sudo tee /etc/profile.d/my_app_env.sh >> /tmp/env_setup.log 2>&1
+echo "Environment variables setup complete." >> /tmp/env_setup.log
 EOF
 
   tags = {
