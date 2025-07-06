@@ -55,7 +55,8 @@ if DB_HOST and DB_PASSWORD:
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    db = SQLAlchemy(app)
+    db = SQLAlchemy()
+    db.init_app(app)
 
     # Import and initialize the Image model
     from db_models.image_table import Image_table
