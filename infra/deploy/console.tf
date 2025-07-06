@@ -144,7 +144,7 @@ resource "aws_instance" "console_test" {
     PROJECT_NAME         = local.project_name
     DB_USERNAME          = local.db_username
     DB_NAME              = local.db_name
-    DB_PASSWORD          = local.db_password
+    # DB_PASSWORD          = local.db_password # Temporarily commented out for debugging
     DB_HOST              = local.db_host
   })
 
