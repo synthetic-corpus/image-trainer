@@ -37,6 +37,7 @@ locals {
   cloudfront_url       = "https://${aws_cloudfront_distribution.sources_cdn.domain_name}"
   s3_bucket_name       = var.s3_bucket_name
   ecr_lambda_md5_image = var.ecr_lambda_md5_image
+  ecr_init_db_image    = var.ecr_init_db_image
   project_name         = var.project
 
   # Database connection details

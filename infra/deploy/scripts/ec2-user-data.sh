@@ -123,6 +123,26 @@ export DB_PASSWORD="${DB_PASSWORD}"
 export DB_HOST="${DB_HOST}"
 EOT
 
+# Additional EC2 Instance Connect debugging
+echo "EC2 Instance Connect debugging information:"
+echo "Checking SSH service status..."
+systemctl status sshd || echo "SSH service not found, checking for ssh service..."
+systemctl status ssh || echo "SSH service status check failed"
+
+echo "Checking SSH configuration..."
+if [ -f /etc/ssh/sshd_config ]; then
+    echo "SSH config file exists"
+    grep -E "^(PasswordAuthentication|PermitRootLogin|PubkeyAuthentication)" /etc/ssh/sshd_config || echo "No relevant SSH config found"
+else
+    echo "SSH config file not found"
+fi
+
+echo "Checking network connectivity..."
+ping -c 3 8.8.8.8 || echo "Internet connectivity test failed"
+
+echo "Checking security group and network interface..."
+curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/ | head -1 | xargs -I {} curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/{}/security-groups || echo "Could not retrieve security groups"
+
 echo "EC2 instance initialization completed successfully!"
 echo "CloudWatch logs should be available at: /aws/ec2/console-test"
 echo "Instance ID: $INSTANCE_ID" 

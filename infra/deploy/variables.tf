@@ -135,6 +135,12 @@ variable "ecr_numpy_lambda_image" {
   default     = "123456789012.dkr.ecr.us-west-2.amazonaws.com/numpy-convert:latest" # Default for local development
 }
 
+variable "ecr_init_db_image" {
+  description = "Path to the ECR Repo for the database initialization lambda."
+  type        = string
+  default     = "123456789012.dkr.ecr.us-west-2.amazonaws.com/init-db:latest" # Default for local development
+}
+
 variable "domain_name" {
   description = "Domain name for the application (e.g., image-trainer.magicalapis.net)"
   type        = string
