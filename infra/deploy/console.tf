@@ -146,15 +146,15 @@ resource "aws_instance" "console_test" {
   iam_instance_profile        = aws_iam_instance_profile.console_s3_profile.name
 
   user_data = templatefile("${path.module}/scripts/ec2-user-data.sh", {
-    # PREFIX               = local.prefix
-    # CLOUDFRONT_URL       = local.cloudfront_url
-    # S3_BUCKET_NAME       = local.s3_bucket_name
-    # ECR_LAMBDA_MD5_IMAGE = local.ecr_lambda_md5_image
-    # PROJECT_NAME         = local.project_name
-    # DB_USERNAME          = local.db_username
-    # DB_NAME              = local.db_name
-    # DB_PASSWORD          = local.db_password
-    # DB_HOST              = local.db_host
+    #PREFIX               = local.prefix
+    #CLOUDFRONT_URL       = local.cloudfront_url
+    #S3_BUCKET_NAME       = local.s3_bucket_name
+    #ECR_LAMBDA_MD5_IMAGE = local.ecr_lambda_md5_image
+    #PROJECT_NAME         = local.project_name
+    #DB_USERNAME          = local.db_username
+    #DB_NAME              = local.db_name
+    #DB_PASSWORD          = local.db_password
+    #DB_HOST              = local.db_host
   })
 
   tags = {

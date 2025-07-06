@@ -9,6 +9,10 @@ PERSISTENT_SCRIPT_PATH="/usr/local/bin/ec2-initial-setup.sh"
 # Cloud-init usually places the user data script here
 # This assumes IMDSv1 or IMDSv2 token retrieval by cloud-init works.
 # We are using a shell variable `INSTANCE_ID` which `cloud-init` sets for user-data scripts
+# Get instance ID for log stream naming
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+echo "Instance ID: $INSTANCE_ID"
+
 CLOUD_INIT_SCRIPT="/var/lib/cloud/instances/${INSTANCE_ID}/user-data.sh"
 
 echo "Attempting to copy user data script to $PERSISTENT_SCRIPT_PATH..." | tee -a /tmp/user-data-debug.log
@@ -45,9 +49,7 @@ systemctl status ec2-instance-connect || echo "Service status check failed, but 
 echo "Installing CloudWatch agent and AWS CLI..."
 yum install -y amazon-cloudwatch-agent aws-cli
 
-# Get instance ID for log stream naming
-INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-echo "Instance ID: $INSTANCE_ID"
+
 
 # Configure CloudWatch agent
 echo "Configuring CloudWatch agent..."
