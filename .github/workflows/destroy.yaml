@@ -29,6 +29,7 @@ jobs:
           TF_VAR_ecr_numpy_lambda_image: ${{ vars.ECR_REPO_NUMPY_LAMBDA }}:latest
           TF_VAR_s3_bucket_name: ${{ vars.S3_BUCKET_NAME }}
           TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}
+          TF_VAR_ecr_init_db_image: ${{ vars.ECR_INIT_DB }}:latest
         run: |
           cd infra/
           docker compose run --rm terraform -chdir=deploy/ init
