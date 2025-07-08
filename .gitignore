@@ -204,6 +204,7 @@ cython_debug/
 # Terraform Stuff to Ignore
 # Local .terraform directories
 **/.terraform/*
+**/.venv/
 
 # .tfstate files
 *.tfstate
@@ -244,3 +245,8 @@ secrets.txt
 samples/*
 # A file that gets me local variables as needed
 infra/deploy/locals.sh  
+
+# A folder that exists largely for created
+# Test and troubleshooting environments
+# locally
+infra/alpha/
