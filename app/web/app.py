@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from botocore.exceptions import ClientError, NoCredentialsError
 import sqlalchemy.exc
+from db_models import Base
 
 # Configure logging for CloudWatch
 logging.basicConfig(level=logging.INFO)
@@ -33,7 +34,8 @@ except (ClientError, NoCredentialsError) as e:
 
 app = Flask(__name__)
 db = SQLAlchemy()
-Image_table = None
+db.Model = Base
+Image_table_base = None
 
 file_name_cache = []
 # Database configuration
@@ -49,45 +51,73 @@ logger.info(f"DB_USER: {DB_USER}")
 if len(DB_PASSWORD) > 0:
     logger.info(f"DB_PASSWORD: {DB_PASSWORD[:4]}******")
     logger.info(f"Database string: \
-                postgresql://{DB_USER}:{DB_PASSWORD[:4]}****@{DB_HOST}") # noqa
+                postgresql://{DB_USER}:{DB_PASSWORD[:4]}****@{DB_HOST}")  # noqa
 else:
     logger.info("DB_PASSWORD: Not SET!")
 
 if DB_HOST and DB_PASSWORD:
     # Construct database connection string
-    DATABASE_URI = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}' # noqa
+    DATABASE_URI = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}'  # noqa
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
-
-    # Import and initialize the Image model
-    from db_models.image_table import Image_table
 
     logger.info("Database connection configured successfully")
 else:
     logger.warning("Database environment variables not set - \
                    database features disabled")
     db = None
-    Image_table = None
+    Image_table_base = None
 
 
 def get_image_url_by_db() -> str:
-    if Image_table is None:
+    # Initial checks for database feature availability
+    if Image_table_base is None or db is None:
         logger.warning("Database features disabled. Cannot get image from DB.")
-        raise RuntimeError("Flask, SQLAlchemy, etc aren't working")
+        raise RuntimeError("Database features are not available. \
+                           Check environment variables.")
 
-    if len(file_name_cache) == 0:
-        next_batch = Image_table.get_random_unclassified()
-        if len(next_batch) == 0:
-            logger.warn("We did not find any unclassifed images!")
-            next_batch = Image_table.get_random_classified()
-        if not next_batch:
-            raise RuntimeError("Could not find rows to classify or unclassify")
-        for element in next_batch:
-            file_name_cache.append(element.file_name)
-    next_file = file_name_cache.pop()
-    return f"{cloudfront_url}/{next_file}"
+    with app.app_context():  # ensures app context!
+        try:
+            if len(file_name_cache) == 0:
+                # Call model methods, passing Flask-SQLAlchemy's db.session
+                next_batch = Image_table_base.get_random_unclassified(db.session)  # noqa E501
+
+                # If no unclassified images, try getting classified ones
+                if len(next_batch) == 0:
+                    logger.warn("We did not find any unclassified images! \
+                                Getting classified images instead.")
+                    next_batch = Image_table_base.get_random_classified(db.session)  # noqa E501
+
+                if not next_batch:
+                    raise RuntimeError("Could not find rows to \
+                                       classify or unclassify")
+
+                # Populate cache with file names
+                for element in next_batch:
+                    file_name_cache.append(element.file_name)
+
+            # Get the next file from the cache
+            next_file = file_name_cache.pop()
+
+            # Return the full URL
+            return f"{cloudfront_url}/{next_file}"
+
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            # Catch SQLAlchemy-specific errors, log, rollback, and re-raise
+            logger.error(f"Database error in get_image_url_by_db: {e}")
+            db.session.rollback()  # Rollback the session
+            raise RuntimeError(f"Database error: {e}")
+
+        except Exception as e:
+            # Catch any other unexpected errors
+            logger.error(f"An unexpected error occurred in \
+                         get_image_url_by_db: {e}")
+            raise RuntimeError(f"An unexpected error occurred: {e}")
+
+        finally:
+            pass  # db.session.remove()
 
 
 def get_image_url() -> str:
@@ -143,7 +173,7 @@ def select_gender():
         try:
             # Convert gender string to boolean
             is_masc = gender.lower() == 'male'
-            Image_table.update_gender(filename, is_masc)
+            Image_table_base.update_gender(filename, is_masc)
             logger.info(f'Successfully updated database for \
                         {filename} with gender: {gender}')
         except ValueError as e:
@@ -170,11 +200,11 @@ def health():
 @app.route('/api/images')
 def get_images():
     """Get all images from the database."""
-    if Image_table is None:
+    if Image_table_base is None:
         return jsonify({"error": "Database not configured"}), 500
 
     try:
-        images = Image_table.query.all()
+        images = Image_table_base.query.all()
         return jsonify([img.to_dict() for img in images])
     except Exception as e:
         logger.error(f"Error fetching images: {e}")
@@ -184,11 +214,11 @@ def get_images():
 @app.route('/api/images/random')
 def get_random_images():
     """Get 10 random unclassified images."""
-    if Image_table is None:
+    if Image_table_base is None:
         return jsonify({"error": "Database not configured"}), 500
 
     try:
-        random_images = Image_table.get_random_unclassified(10)
+        random_images = Image_table_base.get_random_unclassified(10)
         return jsonify([img.to_dict() for img in random_images])
     except Exception as e:
         logger.error(f"Error fetching random images: {e}")
