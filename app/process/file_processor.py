@@ -67,6 +67,7 @@ def get_db_session():
 
         try:
             db_engine = create_engine(connection_string)
+            # Base.metadata.bind = db_engine
             Session = sessionmaker(bind=db_engine)
             db_session = Session()
             logger.info(f"{hidden_string} \
