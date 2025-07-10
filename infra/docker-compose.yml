@@ -4,6 +4,7 @@ services:
     volumes:
       - ./setup:/tf/setup
       - ./deploy:/tf/deploy
+      - ./alpha:/tf/alpha
     working_dir: /tf
     environment:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}

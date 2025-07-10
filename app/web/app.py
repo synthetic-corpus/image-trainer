@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from botocore.exceptions import ClientError, NoCredentialsError
 import sqlalchemy.exc
-from db_models import Base
+from db_models.image_table_base import Base
 
 # Configure logging for CloudWatch
 logging.basicConfig(level=logging.INFO)
