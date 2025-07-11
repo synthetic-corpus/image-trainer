@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from botocore.exceptions import ClientError, NoCredentialsError
 import sqlalchemy.exc
-from db_models.image_table_base import Base
+
 
 # Configure logging for CloudWatch
 logging.basicConfig(level=logging.INFO)
@@ -16,11 +16,13 @@ logger = logging.getLogger(__name__)
 try:
     # Try Lambda environment first (modules at same level)
     from modules.cdn import CDN
+    from db_models.image_table_base import Base
     logger.info("Modules imported at Root Successfully")
 except ImportError:
     # Fall back to local development (modules one level up)
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     from modules.cdn import CDN
+    from db_models.image_table_base import Base
     logger.info("Modules imported at fallback Successfully")
 
 try:
