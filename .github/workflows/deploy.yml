@@ -74,6 +74,10 @@ jobs:
           fi
           echo "Using workspace: $(cat .workspace)"
           echo "Branch: $BRANCH_NAME"
+          echo "Current directory: $(pwd)"
+          echo "Workspace file exists: $(ls -la .workspace)"
+          echo "Repository root contents:"
+          ls -la
 
       - name: Push to ECR
         run: |
@@ -166,6 +170,13 @@ jobs:
           ls -la *.sh
           echo ""
           echo "Running determine-db-approach.sh..."
+          echo "Checking for .workspace file before running script:"
+          echo "Current directory: $(pwd)"
+          echo "Repository root: $(realpath ../../)"
+          echo "Workspace file at root: $(ls -la ../../.workspace 2>/dev/null || echo 'NOT FOUND')"
+          echo "Repository root contents:"
+          ls -la ../../
+          echo ""
           eval "$(./determine-db-approach.sh)"
           # Convert string "true"/"false" to boolean for Terraform
           if [ "$USE_SNAPSHOT" = "true" ]; then

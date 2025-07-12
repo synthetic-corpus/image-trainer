@@ -8,7 +8,7 @@ set -e
 
 # Read workspace from .workspace file (created by GitHub workflow)
 # The script runs from infra/deploy/scripts, so .workspace is at ../../.workspace
-WORKSPACE_FILE="../../.workspace"
+WORKSPACE_FILE="../../../.workspace"
 if [ -f "$WORKSPACE_FILE" ]; then
     WORKSPACE=$(cat "$WORKSPACE_FILE")
     PREFIX="ml-simple-${WORKSPACE}"
