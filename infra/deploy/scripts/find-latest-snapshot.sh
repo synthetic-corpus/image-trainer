@@ -7,14 +7,24 @@
 set -e
 
 # Read workspace from .workspace file (created by GitHub workflow)
-if [ -f "../../.workspace" ]; then
-    WORKSPACE=$(cat ../../.workspace)
+# The script runs from infra/deploy/scripts, so .workspace is at ../../.workspace
+WORKSPACE_FILE="../../.workspace"
+if [ -f "$WORKSPACE_FILE" ]; then
+    WORKSPACE=$(cat "$WORKSPACE_FILE")
     PREFIX="ml-simple-${WORKSPACE}"
     echo "Using workspace from .workspace file: ${WORKSPACE}" >&2
+    echo "Workspace file path: $(realpath "$WORKSPACE_FILE")" >&2
 else
     # Fallback: Default prefix if not provided
     PREFIX=${1:-"ml-simple"}
-    echo "No .workspace file found, using default prefix: ${PREFIX}" >&2
+    echo "No .workspace file found at $WORKSPACE_FILE, using default prefix: ${PREFIX}" >&2
+    echo "Current directory: $(pwd)" >&2
+    echo "Files in current directory:" >&2
+    ls -la >&2
+    echo "Files in parent directory:" >&2
+    ls -la .. >&2
+    echo "Files in grandparent directory:" >&2
+    ls -la ../.. >&2
 fi
 SNAPSHOT_PATTERN="${PREFIX}-db-final-snapshot-"
 
