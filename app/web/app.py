@@ -176,7 +176,7 @@ def select_gender():
         try:
             # Convert gender string to boolean
             is_masc = gender.lower() == 'male'
-            Image_table_base.update_gender(filename, is_masc)
+            Image_table_base.update_gender(db.session, filename, is_masc)
             logger.info(f'Successfully updated database for \
                         {filename} with gender: {gender}')
         except ValueError as e:
