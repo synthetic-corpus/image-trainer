@@ -161,7 +161,7 @@ resource "aws_lambda_function" "init_db" {
     aws_iam_role_policy_attachment.init_db_lambda_logs_attachment,
     aws_iam_role_policy_attachment.init_db_lambda_ecr_attachment,
     aws_iam_role_policy_attachment.init_db_lambda_vpc_attachment,
-    aws_cloudwatch_event_rule.rds_db_created
+    aws_cloudwatch_event_rule.rds_db_available
   ]
 
   tags = {
