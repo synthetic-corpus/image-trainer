@@ -224,4 +224,101 @@ jobs:
           terraform workspace select $WORKSPACE
           echo "DB_ENDPOINT=$(terraform output -raw db_endpoint)" >> $GITHUB_ENV
           echo "DB_NAME=$(terraform output -raw db_name)" >> $GITHUB_ENV
-          echo "DB_USERNAME=$(terraform output -raw db_username)" >> $GITHUB_ENV 
+          echo "DB_USERNAME=$(terraform output -raw db_username)" >> $GITHUB_ENV
+
+      - name: Invoke Database Initialization Lambda
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
+        run: |
+          echo "=== Invoking Database Initialization Lambda ==="
+          cd infra/deploy
+          WORKSPACE=$(cat ../../.workspace)
+          terraform workspace select $WORKSPACE
+          
+          # Get the Lambda function name from Terraform output
+          LAMBDA_FUNCTION_NAME=$(terraform output -raw init_db_lambda_function_name)
+          echo "Lambda function name: $LAMBDA_FUNCTION_NAME"
+          
+          # Wait a moment for the database to be fully available
+          echo "Waiting 30 seconds for database to be fully available..."
+          sleep 30
+          
+          # Retry logic for Lambda invocation
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
+            
+            # Invoke the Lambda function
+            echo "Invoking Lambda function..."
+            if aws lambda invoke \
+              --function-name "$LAMBDA_FUNCTION_NAME" \
+              --payload '{"source": "manual.deployment", "detail-type": "Manual Database Initialization", "detail": {"trigger": "deployment_pipeline"}}' \
+              --region ${{ env.AWS_REGION }} \
+              response.json; then
+              
+              # Check the response
+              echo "Lambda invocation response:"
+              cat response.json
+              
+              # Parse the response to check if it was successful
+              if jq -e '.StatusCode == 200' response.json > /dev/null 2>&1; then
+                echo "✅ Lambda function invoked successfully"
+                break
+              else
+                echo "⚠️ Lambda invoked but returned non-200 status"
+                cat response.json
+              fi
+            else
+              echo "❌ Failed to invoke Lambda function"
+            fi
+            
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Waiting 10 seconds before retry..."
+              sleep 10
+            fi
+          done
+          
+          # Final check
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "❌ Failed to invoke Lambda function after $MAX_RETRIES attempts"
+            exit 1
+          fi
+
+      - name: Check Lambda Logs
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.target_branch == 'main' || github.ref == 'refs/heads/main')
+        run: |
+          echo "=== Checking Lambda Logs ==="
+          cd infra/deploy
+          WORKSPACE=$(cat ../../.workspace)
+          terraform workspace select $WORKSPACE
+          
+          LAMBDA_FUNCTION_NAME=$(terraform output -raw init_db_lambda_function_name)
+          LOG_GROUP_NAME="/aws/lambda/$LAMBDA_FUNCTION_NAME"
+          
+          echo "Checking logs for: $LOG_GROUP_NAME"
+          
+          # Get the latest log stream
+          LATEST_STREAM=$(aws logs describe-log-streams \
+            --log-group-name "$LOG_GROUP_NAME" \
+            --order-by LastEventTime \
+            --descending \
+            --max-items 1 \
+            --region ${{ env.AWS_REGION }} \
+            --query 'logStreams[0].logStreamName' \
+            --output text)
+          
+          if [ "$LATEST_STREAM" != "None" ] && [ "$LATEST_STREAM" != "null" ]; then
+            echo "Latest log stream: $LATEST_STREAM"
+            echo "=== Recent Lambda Logs ==="
+            aws logs get-log-events \
+              --log-group-name "$LOG_GROUP_NAME" \
+              --log-stream-name "$LATEST_STREAM" \
+              --region ${{ env.AWS_REGION }} \
+              --query 'events[*].message' \
+              --output text | tail -20
+          else
+            echo "No log streams found for Lambda function"
+          fi 

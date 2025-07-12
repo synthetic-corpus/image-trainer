@@ -6,8 +6,16 @@
 
 set -e
 
-# Default prefix if not provided
-PREFIX=${1:-"ml-simple"}
+# Read workspace from .workspace file (created by GitHub workflow)
+if [ -f "../../.workspace" ]; then
+    WORKSPACE=$(cat ../../.workspace)
+    PREFIX="ml-simple-${WORKSPACE}"
+    echo "Using workspace from .workspace file: ${WORKSPACE}" >&2
+else
+    # Fallback: Default prefix if not provided
+    PREFIX=${1:-"ml-simple"}
+    echo "No .workspace file found, using default prefix: ${PREFIX}" >&2
+fi
 
 echo "Determining database approach for prefix: ${PREFIX}" >&2
 

@@ -169,6 +169,12 @@ resource "aws_lambda_function" "init_db" {
   }
 }
 
+# Output for the Lambda function name
+output "init_db_lambda_function_name" {
+  description = "The name of the database initialization Lambda function"
+  value       = aws_lambda_function.init_db.function_name
+}
+
 # Security group for Init DB Lambda to access RDS
 resource "aws_security_group" "init_db_lambda_sg" {
   name        = "${var.prefix}-init-db-lambda-sg-${var.environment}"
