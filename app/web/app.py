@@ -17,12 +17,14 @@ try:
     # Try Lambda environment first (modules at same level)
     from modules.cdn import CDN
     from db_models.image_table_base import Base
+    from db_models.image_table_base import Image_table_base
     logger.info("Modules imported at Root Successfully")
 except ImportError:
     # Fall back to local development (modules one level up)
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     from modules.cdn import CDN
     from db_models.image_table_base import Base
+    from db_models.image_table_base import Image_table_base
     logger.info("Modules imported at fallback Successfully")
 
 try:
@@ -37,7 +39,6 @@ except (ClientError, NoCredentialsError) as e:
 app = Flask(__name__)
 db = SQLAlchemy()
 db.Model = Base
-Image_table_base = None
 
 file_name_cache = []
 # Database configuration
@@ -70,7 +71,7 @@ else:
     logger.warning("Database environment variables not set - \
                    database features disabled")
     db = None
-    Image_table_base = None
+    Image_table_base = None  # noqa F811
 
 
 def get_image_url_by_db() -> str:
