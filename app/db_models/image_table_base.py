@@ -7,7 +7,6 @@ without manual column declarations.
 from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import func
-from sqlalchemy.orm import session
 
 # This will be initialized in the main app
 Base = declarative_base()
@@ -59,24 +58,24 @@ class Image_table_base(Base):
         }
 
     @classmethod
-    def get_random_unclassified(cls, limit=10):
+    def get_random_unclassified(cls, session, limit=10):
         """Get random samples of images where is_masc_human IS NULL"""
-        return cls.query.filter(
+        return session.query(cls).filter(
             cls.is_masc_human.is_(None)
         ).order_by(func.random()).limit(limit).all()
 
     @classmethod
-    def get_random_classified(cls, limit=10):
+    def get_random_classified(cls, session, limit=10):
         """Get random image samples where is_masc_human is NOT NULL."""
-        return cls.query.filter(
+        return session.query(cls).filter(
             cls.is_masc_human.isnot(None)
         ).order_by(func.random()).limit(limit).all()
 
     @classmethod
-    def update_gender(cls, file_name: str, is_masc: bool) -> None:
+    def update_gender(cls, session, file_name: str, is_masc: bool) -> None:
         """ Updates the Gender, by human for a certain file name """
 
-        result = cls.query.filter_by(file_name=file_name).update(
+        result = session.query(cls).filter_by(file_name=file_name).update(
             {'is_masc_human': is_masc}
         )
         if result == 0:
