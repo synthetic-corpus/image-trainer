@@ -147,6 +147,8 @@ resource "aws_instance" "console_test" {
 
   user_data = <<-EOF
 #!/bin/bash
+# some things that this will need to work right
+dnf install -y bsdtar
 
 # Install Python 3 and Pip 3
 echo "Installing Python 3 and Pip 3..." > /tmp/python_pip_install.log

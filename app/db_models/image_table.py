@@ -5,7 +5,7 @@ without manual column declarations.
 """
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
+from sqlalchemy import func, TIMESTAMP
 
 # This will be initialized in the main app
 db = SQLAlchemy()
@@ -35,6 +35,7 @@ class Image_table(db.Model):
     is_masc_human = db.Column(db.Boolean, nullable=True)
     is_masc_prediction = db.Column(db.Boolean, nullable=True)
     hash = db.Column(db.String(255), nullable=False)
+    deleted_at = db.Column(TIMESTAMP, nullable=True, default=None)
 
     def __init__(self, *args, **kwargs):
         """Initialize the Image model with an empty randoms list."""
