@@ -194,6 +194,43 @@ def select_gender():
     return redirect(url_for('index', gender=selection_data['gender']))
 
 
+@app.route('/trash-image', methods=['POST'])
+def trash_image():
+    current_image_url = request.form.get('current_image_url', None)
+    message = None
+    filename = None
+    try:
+        filename = extract_filename_from_url(current_image_url)
+    except Exception as e:
+        logger.error(f"Error extracting filename from URL: {e}. \
+                     No data will be written!")
+        filename = None
+
+    if filename is not None:
+        try:
+            Image_table_base.trash_file(db.session, filename)
+            logger.info(f'Successfully trashed image: {filename}')
+            message = f"Trashed image {filename}"
+        except ValueError as e:
+            logger.error(f'Image not in database for {filename}: {e}')
+            message = f"Image not in database for {filename}"
+        except sqlalchemy.exc.IntegrityError as e:
+            logger.error(f'Database integrity error for {filename}: {e}')
+            message = f"Database integrity error for {filename}"
+        except sqlalchemy.exc.OperationalError as e:
+            logger.error(f'Database connection error for {filename}: {e}')
+            message = f"Database connection error for {filename}"
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            logger.error(f'SQLAlchemy error for {filename}: {e}')
+            message = f"SQLAlchemy error for {filename}"
+        except Exception as e:
+            logger.error(f'Unexpected error trashing \
+                         image for {filename}: {e}')
+            message = f"Unexpected error trashing image for {filename}"
+
+    return redirect(url_for('index', message=message))
+
+
 @app.route('/health')
 def health():
     container_name = os.environ.get('CONTAINER_NAME', 'web')

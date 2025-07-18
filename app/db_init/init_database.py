@@ -37,7 +37,8 @@ def create_images_table(engine):
                     file_name VARCHAR(255) UNIQUE NOT NULL,
                     is_masc_human BOOLEAN,
                     is_masc_prediction BOOLEAN,
-                    hash VARCHAR(255) NOT NULL
+                    hash VARCHAR(255) NOT NULL,
+                    deleted_at TIMESTAMP NULL DEFAULT NULL
                 );
             """))
 

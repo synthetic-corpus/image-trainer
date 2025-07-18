@@ -6,7 +6,7 @@ without manual column declarations.
 
 from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import func
+from sqlalchemy import func, TIMESTAMP
 
 # This will be initialized in the main app
 Base = declarative_base()
@@ -36,6 +36,7 @@ class Image_table_base(Base):
     is_masc_human = Column(Boolean, nullable=True)
     is_masc_prediction = Column(Boolean, nullable=True)
     hash = Column(String(255), nullable=False)
+    deleted_at = Column(TIMESTAMP, nullable=True, default=None)
 
     def __init__(self, *args, **kwargs):
         """Initialize the Image model with an empty randoms list."""
@@ -59,16 +60,20 @@ class Image_table_base(Base):
 
     @classmethod
     def get_random_unclassified(cls, session, limit=10):
-        """Get random samples of images where is_masc_human IS NULL"""
+        """Get random samples of images where is_masc_human IS NULL
+        and deleted_at IS NULL"""
         return session.query(cls).filter(
-            cls.is_masc_human.is_(None)
+            cls.is_masc_human.is_(None),
+            cls.deleted_at.is_(None)
         ).order_by(func.random()).limit(limit).all()
 
     @classmethod
     def get_random_classified(cls, session, limit=10):
-        """Get random image samples where is_masc_human is NOT NULL."""
+        """Get random image samples where is_masc_human is
+        NOT NULL and deleted_at IS NULL."""
         return session.query(cls).filter(
-            cls.is_masc_human.isnot(None)
+            cls.is_masc_human.isnot(None),
+            cls.deleted_at.is_(None)
         ).order_by(func.random()).limit(limit).all()
 
     @classmethod
@@ -82,4 +87,15 @@ class Image_table_base(Base):
             # No rows were updated, meaning the file_name wasn't found
             raise ValueError(f"Image with file_name '{file_name}' not found")
 
+        session.commit()
+
+    @classmethod
+    def trash_file(cls, session, file_name: str) -> None:
+        """Set deleted_at to the current timestamp for the given file_name."""
+        from sqlalchemy import func as sa_func
+        result = session.query(cls).filter_by(file_name=file_name).update(
+            {'deleted_at': sa_func.now()}
+        )
+        if result == 0:
+            raise ValueError(f"Image with file_name '{file_name}' not found")
         session.commit()
