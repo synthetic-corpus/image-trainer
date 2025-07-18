@@ -7,29 +7,30 @@ data "aws_cloudwatch_event_bus" "default" {
   name = "default"
 }
 
-# EventBridge rule to capture RDS database creation events
-resource "aws_cloudwatch_event_rule" "rds_db_created" {
-  name        = "${var.prefix}-rds-db-created-${var.environment}"
-  description = "Capture RDS database creation events"
+# EventBridge rule to capture RDS database availability events
+resource "aws_cloudwatch_event_rule" "rds_db_available" {
+  name        = "${var.prefix}-rds-db-available-${var.environment}"
+  description = "Capture RDS database availability events"
 
   event_pattern = jsonencode({
     source      = ["aws.rds"]
     detail-type = ["RDS DB Instance Event"]
     detail = {
-      EventCategories = ["creation", "notification"]
+      EventCategories = ["availability"]
       SourceType      = ["DB_INSTANCE"]
       SourceArn       = ["arn:aws:rds:${var.aws_region}:*:db:${local.prefix}-db"]
+      Message         = ["DB instance is available"]
     }
   })
 
   tags = {
-    Name = "${var.prefix}-rds-db-created-rule-${var.environment}"
+    Name = "${var.prefix}-rds-db-available-rule-${var.environment}"
   }
 }
 
-# EventBridge target to invoke the init-db Lambda
+# EventBridge target to invoke the init-db Lambda (for availability events)
 resource "aws_cloudwatch_event_target" "init_db_lambda" {
-  rule      = aws_cloudwatch_event_rule.rds_db_created.name
+  rule      = aws_cloudwatch_event_rule.rds_db_available.name
   target_id = "InitDBLambda"
   arn       = aws_lambda_function.init_db.arn
 
@@ -56,5 +57,5 @@ resource "aws_lambda_permission" "eventbridge_invoke" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.init_db.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.rds_db_created.arn
+  source_arn    = aws_cloudwatch_event_rule.rds_db_available.arn
 } 

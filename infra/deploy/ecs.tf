@@ -222,7 +222,7 @@ resource "aws_ecs_task_definition" "web" {
   depends_on = [
     aws_db_instance.main,
     aws_lambda_function.init_db,
-    aws_cloudwatch_event_rule.rds_db_created,
+    aws_cloudwatch_event_rule.rds_db_available,
     aws_cloudwatch_event_target.init_db_lambda,
     aws_lambda_permission.eventbridge_invoke
   ]
@@ -281,7 +281,7 @@ resource "aws_ecs_service" "web" {
   depends_on = [
     aws_db_instance.main,
     aws_lambda_function.init_db,
-    aws_cloudwatch_event_rule.rds_db_created,
+    aws_cloudwatch_event_rule.rds_db_available,
     aws_cloudwatch_event_target.init_db_lambda,
     aws_lambda_permission.eventbridge_invoke
   ]
