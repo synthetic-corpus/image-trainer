@@ -250,6 +250,6 @@ infra/deploy/locals.sh
 # Test and troubleshooting environments
 # locally
 infra/alpha/
-infra/trash
+infra/trash/
 # for ease of local testing
 app/web/local-env.sh 

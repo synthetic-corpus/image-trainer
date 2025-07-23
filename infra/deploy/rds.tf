@@ -44,6 +44,15 @@ resource "aws_security_group" "rds" {
     description = "PostgreSQL access from new private NAT subnet"
   }
 
+  # Allow PostgreSQL access from EC2 console instance
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.console_access.id]
+    description     = "PostgreSQL access from EC2 console instance"
+  }
+
   # Allow all outbound traffic
   egress {
     from_port   = 0
