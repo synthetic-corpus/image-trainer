@@ -196,14 +196,6 @@ resource "aws_ec2_instance_connect_endpoint" "public_endpoint_a" {
   }
 }
 
-resource "aws_ec2_instance_connect_endpoint" "public_endpoint_b" {
-  subnet_id          = aws_subnet.public_a.id # EC2 Instance Connect endpoints must be in public subnets
-  security_group_ids = [aws_security_group.console_access.id]
-  tags = {
-    Name = "${local.prefix}-ec2-instance-connect-endpoint-b"
-  }
-}
-
 resource "aws_instance" "trainer_test" {
   ami                    = local.ami_image_id_big
   instance_type          = "c8g.xlarge"
