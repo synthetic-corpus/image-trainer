@@ -205,7 +205,7 @@ resource "aws_ec2_instance_connect_endpoint" "public_endpoint_b" {
 }
 
 resource "aws_instance" "trainer_test" {
-  ami                    = local.ami_image_id
+  ami                    = local.ami_image_id_big
   instance_type          = "c8g.xlarge"
   subnet_id              = aws_subnet.private_nat.id
   vpc_security_group_ids = [aws_security_group.console_access.id]
