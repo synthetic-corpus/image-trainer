@@ -72,7 +72,7 @@ data "aws_iam_policy_document" "console_s3_policy_doc" {
       "s3:ListBucket"
     ]
     resources = [
-      data.aws_s3_bucket.existing.arn,
+      "${data.aws_s3_bucket.existing.arn}/num*",
       "${data.aws_s3_bucket.existing.arn}/upload/*",
       "${data.aws_s3_bucket.existing.arn}/sources/*"
     ]
@@ -256,19 +256,15 @@ chmod +x /tmp/export_env.sh
 # Clone the ml-console-train repo (all branches)
 mkdir -p /home/ec2-user/console
 cd /home/ec2-user/console
-if [ ! -d ".git" ]; then
-  git clone https://github.com/synthetic-corpus/ml-console-train .
-  # git clone repo.git .
-  git remote set-url origin https://github.com/synthetic-corpus/ml-console-train
-  git fetch --all
-fi
-# Ensure all branches are available
-for branch in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/); do
-  git branch --track "$${branch#origin/}" "$branch" 2>/dev/null || true
-done
-
 # Set permissions for ec2-user
 chown -R ec2-user:ec2-user /home/ec2-user/console
+
+git clone https://github.com/synthetic-corpus/ml-console-train .
+  # git clone repo.git .
+git remote set-url origin https://github.com/synthetic-corpus/ml-console-train
+git fetch --all
+
+
 
 # Create and activate Python virtual environment
 sudo -u ec2-user python3 -m venv /home/ec2-user/console/.venv
