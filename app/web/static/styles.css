@@ -16,7 +16,18 @@ body {
   cursor: pointer;
 }
 
-.retro-button:active {
+.retro-no {
+  background-color: #c0c0c0;
+  border: outset 3px #dddddd;
+  color: #000000;
+  font-family: "Arial", sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 5px 15px;
+  cursor: pointer;
+}
+
+.retro-button-no:active {
   border-style: inset;
 }
 
@@ -51,4 +62,50 @@ a:visited {
 
 a:hover {
   color: #ff0000;
+}
+
+.retro-delete-button {
+  background-color: #FF3333;
+  color: #fff;
+  font-weight: bold;
+  border: 2px solid #800000;
+  border-radius: 4px;
+  font-family: 'Arial Black', Arial, Helvetica, sans-serif;
+  font-size: 18px;
+  padding: 8px 0;
+  margin-top: 8px;
+  box-shadow: 2px 2px 0 #800000;
+  cursor: pointer;
+  text-shadow: 1px 1px 0 #800000;
+  width: 340px; /* Matches combined width of two .retro-button (2x160px + margins) */
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.retro-delete-button:hover {
+  background-color: #CC0000;
+  color: #FFFF00;
+}
+.retro-button {
+  background-color: #3399FF;
+  color: #fff;
+  font-weight: bold;
+  border: 2px solid #003366;
+  border-radius: 4px;
+  font-family: 'Arial Black', Arial, Helvetica, sans-serif;
+  font-size: 18px;
+  padding: 8px 0;
+  margin: 0 8px;
+  box-shadow: 2px 2px 0 #003366;
+  cursor: pointer;
+  text-shadow: 1px 1px 0 #003366;
+  transition: background 0.2s, color 0.2s;
+  width: 160px;
+  display: inline-block;
+}
+.retro-button:hover {
+  background-color: #66FF66;
+  color: #0000FF;
+  border-color: #009900;
+  box-shadow: 2px 2px 0 #009900;
 }
