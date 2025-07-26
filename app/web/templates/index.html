@@ -23,14 +23,14 @@
                 <br><br>
                 
                 <!-- Display message if gender was selected -->
-                {% if message %}
+
                 <div class="message-box">
                     <font color="red" face="Arial, Helvetica" size="4">
-                        <b>{{ message }}</b>
+                        <b>Is it the <em>correct</em> Black Kilt?</b>
                     </font>
                 </div>
                 <br>
-                {% endif %}
+
                 
                 <!-- Form for gender selection -->
                 <form method="POST" action="{{ url_for('select_gender') }}">
@@ -55,14 +55,25 @@
                 <br>
                 
                 <!-- Show current selection if any -->
-                {% if selected_gender %}
-                <div class="selection-display">
-                    <font face="Arial, Helvetica" size="3">
-                        Current selection: <b>{{ selected_gender.upper() }}</b>
-                    </font>
+
+                <div class="selection-display" style="max-width: 400px;"">
+                    <h3>The Black Kilt you're looking for has...</h3>
+                    <ul style="list-style-type: none;">
+                        <li>Pockets</li>
+                        <li>Two Straps at the waist</li>
+                        <li>Chrome hardware</li>
+                    </ul>
+                    <h3>The Black Kilt does <b>not have</b>...</h3>
+                    <ul style="list-style-type: none;">
+                        <li>Hooks for a sporran bag</li>
+                        <li>Red Thread anywhere</li>
+                        <li>Large metal hoops</li>
+                        <li>Checkered patterns</li>
+                    </ul>
+                    <p>Additionally, the kilt is not a pair of shorts or a suit case.</p>
                 </div>
                 <br>
-                {% endif %}
+
                 
                 <marquee scrollamount="3" behavior="alternate">
                     <font color="red" face="Impact, Arial, Helvetica">Welcome to my awesome website! Best viewed in Netscape Navigator 4.0 or Internet Explorer 4.0</font>
