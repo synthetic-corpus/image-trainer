@@ -35,7 +35,7 @@ logger.setLevel(logging.INFO)
 s3_access = None
 
 # Get default target pixels from environment variable
-DEFAULT_TARGET_PIXELS = int(os.environ.get('DEFAULT_TARGET_PIXELS', '100'))
+DEFAULT_TARGET_PIXELS = int(os.environ.get('DEFAULT_TARGET_PIXELS', '500'))
 TO_GRAYSCALE = bool(int(os.environ.get('TO_GRAYSCALE', '0')))
 
 
