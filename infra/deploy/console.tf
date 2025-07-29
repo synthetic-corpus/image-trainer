@@ -72,7 +72,7 @@ data "aws_iam_policy_document" "console_s3_policy_doc" {
       "s3:ListBucket"
     ]
     resources = [
-      data.aws_s3_bucket.existing.arn,
+      "${data.aws_s3_bucket.existing.arn}/nump*",
       "${data.aws_s3_bucket.existing.arn}/upload/*",
       "${data.aws_s3_bucket.existing.arn}/sources/*"
     ]
