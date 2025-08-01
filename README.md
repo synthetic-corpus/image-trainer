@@ -34,7 +34,6 @@ This is the Terraform folder that will deploy most of the project. It is intende
 
 More details about those variables can be found in deploy/readme.md
 
-
 # Notes on the Database
 
 The database will first look for a AWS snapshots before loading a fresh database.
