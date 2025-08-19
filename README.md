@@ -1,49 +1,77 @@
 # image-trainer
-This project will use ML to classifly a huge source of character portaits. It relies on entirely on python with Flask, Pillow, Scikit learn and few other libraries. It is deployed with Terraform.
 
-# How it works
-This project is designed to work with .jpeg, .jpg, and .png files only. It uses a prepocessing technique to ready the files.
+This project uses ML to classify a large collection of character portraits. It is written entirely in Python and uses Flask, Pillow, Scikit-learn, and a few other libraries. Deployment is handled with Terraform.
 
-A user must manually upload any number of files into an s3 bucket (see setup section) in a folder called 'upload'. Then the project will run two different Lambdas. The first Lambdas gets a hash value of the file in upload and moves into a sources folder. It also writes a row in the database. Then the original upload file is deleted to save space. Next, another Lambda reads the file in the bucket's sources folder. It creates a new Numpy file from that image an places it in the numpy folder.
+---
 
-From there, the CDN can read from sources to display the files for labeling. The numpy files names will match the hash can can later be used for Machine Learning.
+## How it works
 
-# Set up and Disclaimer
+This project is designed to work with `.jpeg`, `.jpg`, and `.png` files only. It applies a preprocessing technique to prepare the files.
 
-This project has all the Terraform code needed to deploy this project, but some manual set up is still required and user will need to configure various variables.
+1. A user must manually upload any number of files into an S3 bucket (see setup section) inside a folder called `upload`.  
+2. The project runs two different Lambdas:  
+   - The first Lambda generates a hash value for each file in `upload`, moves it into a `sources` folder, writes a row into the database, and deletes the original file to save space.  
+   - The second Lambda reads the file from the bucket’s `sources` folder, creates a new Numpy file from the image, and places it in the `numpy` folder.  
 
-Additionally *everything here costs money* to deploy to AWS, so use at your own risk and at your cost. I am not responible for any costs you incur should you use this code. :-)
+From there, the CDN can read from `sources` to display the files for labeling. The Numpy filenames match the hash values and can later be used for Machine Learning.
 
-## Set Up - Manual Set up
+---
 
-Is intended to be set up with Terraform. Users will need prepare the usual s3 buckets and a dynomodb table for Terraform.
+## Setup and Disclaimer
 
-Additionally, users will need to *manually create* an s3 bucket and keep track of its name. It must be referenced correctly in deploy/existing.tf either by hard coding it there, intepereting it from git hub action, or other means etc.
+This project includes all the Terraform code needed to deploy, but some manual setup is still required. You will also need to configure various variables.
 
-User will also need a domain set up with AWS via Route 
+⚠️ **Important:** *Everything here costs money* to deploy to AWS. Use at your own risk and at your own cost. I am not responsible for any charges you may incur.
 
-## Set up - setup/main.tf
+---
 
-This section is intended to be deployed with Terraform *locally* via an admin account. It will create a user account and access key for use in deploy/main.tf. It will also create AWS container registries used for the creation of lambdas and ecs tasks used in the deploy folder.
+### Setup — Manual Steps
 
-The AWS Key is a hidden output see terrform CLI commands to learn how to view it. :-)
+Although this project is intended to be deployed with Terraform, you will still need to prepare:  
+- the usual S3 buckets, and  
+- a DynamoDB table for Terraform state management.  
 
-## Set up - deploy/main.tf
+Additionally, you must *manually create* an S3 bucket and record its name. It must be referenced correctly in `deploy/existing.tf` — either by hard-coding it, retrieving it from GitHub Actions, or other means.  
 
-This is the Terraform folder that will deploy most of the project. It is intended to be deployed through github actions, but can be deployed through CLI as well. Either way, it requires several variables to be set either locally or through hard coding, a git variable etc.
+You will also need a domain set up in AWS Route 53.  
 
-More details about those variables can be found in deploy/readme.md
+---
 
-# Notes on the Database
+### Setup — `setup/main.tf`
 
-The database will first look for a AWS snapshots before loading a fresh database.
+This section should be deployed with Terraform **locally** via an admin account. It will:  
+- create a user account and access key for use in `deploy/main.tf`, and  
+- create AWS container registries for Lambda functions and ECS tasks defined in the `deploy` folder.  
 
-The Database is *designed* to trigger a Lambda that preps a single database table after it is ready. However that Lambda does not usually trigger due to the complexity of timing with Eventbridge. Go into the console and run the lambda set up in deploy/init-db-lambda.tf as a test. It is expected to set up the database table.
+The AWS key is a hidden Terraform output — see the Terraform CLI documentation to learn how to view it.  
 
-If the database is loaded from a snapshot, running the Lambda will not be needed.
+---
 
-# How to Train
+### Setup — `deploy/main.tf`
 
-Once deployed, the project will be accesible through a web interface at the domain. Go through the photos labeling them as male of female. Delete any that are not suitable with delete button. (This is a soft delete in the database).
+This Terraform folder deploys most of the project. It is intended to run through GitHub Actions, but it can also be deployed via the CLI. In either case, it requires several variables to be set (locally, through hard-coding, or via GitHub variables).  
 
-Then remote into the larger of the two ec2 instances and git clone this related repository. Tools here will allow a user to try out three different models from the CLI.
+More details about required variables can be found in `deploy/readme.md`.  
+
+---
+
+## Notes on the Database
+
+- On startup, the database will first check for AWS snapshots before creating a fresh database.  
+- The database is *designed* to trigger a Lambda that prepares a single database table once it is ready. However, this Lambda often does not trigger automatically due to timing complexities with EventBridge.  
+  - To fix this, go into the AWS console and manually run the Lambda defined in `deploy/init-db-lambda.tf`. It should initialize the database table.  
+- If the database is restored from a snapshot, running this Lambda will not be necessary.  
+
+---
+
+## How to Train
+
+Once deployed, the project will be accessible via the web interface at the configured domain.  
+
+- Go through the photos, labeling them as **male** or **female**.  
+- Delete unsuitable images using the delete button (note: this performs a soft delete in the database).  
+
+To begin training:  
+1. Remote into the larger of the two EC2 instances.  
+2. Clone the related repository.  
+3. Use the included tools to experiment with three different models directly from the CLI.  
