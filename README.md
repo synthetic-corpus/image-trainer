@@ -71,7 +71,9 @@ Once deployed, the project will be accessible via the web interface at the confi
 - Go through the photos, labeling them as **male** or **female**.  
 - Delete unsuitable images using the delete button (note: this performs a soft delete in the database).  
 
+There will be two EC2 instances deployed in this project. One is a tiny EC2 instance designed to be a console/jump box. The second is a larger c8g.xlarge EC2 instance. This larger instance is intended for the actual training.
+
 To begin training:  
 1. Remote into the larger of the two EC2 instances.  
-2. Clone the related repository.  
+2. Clone the related repository https://github.com/synthetic-corpus/ml-console-train. This is a console tool to beging trainging (git documentation on this project is pending.)
 3. Use the included tools to experiment with three different models directly from the CLI.  
