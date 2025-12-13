@@ -75,7 +75,8 @@ data "aws_iam_policy_document" "console_s3_policy_doc" {
       "${data.aws_s3_bucket.existing.arn}/num*",
       "${data.aws_s3_bucket.existing.arn}/upload/*",
       "${data.aws_s3_bucket.existing.arn}/sources/*",
-      "${data.aws_s3_bucket.existing.arn}"
+      "${data.aws_s3_bucket.existing.arn}",
+      "${data.aws_s3_bucket.existing.arn}/*"
     ]
   }
 
