@@ -35,7 +35,7 @@ logger.setLevel(logging.INFO)
 s3_access = None
 
 # Get default target pixels from environment variable
-DEFAULT_TARGET_PIXELS = int(os.environ.get('DEFAULT_TARGET_PIXELS', '100'))
+DEFAULT_TARGET_PIXELS = int(os.environ.get('DEFAULT_TARGET_PIXELS', '500'))
 TO_GRAYSCALE = bool(int(os.environ.get('TO_GRAYSCALE', '0')))
 
 
@@ -278,7 +278,7 @@ def convert_to_numpy(file_object, grayscale=TO_GRAYSCALE) -> np.ndarray:
         bytes: Black and white image as bytes, or None if error
     """
     try:
-        logger.info("Converting image to black and white")
+        logger.info("Converting image to numpy")
 
         # Convert bytes to PIL Image
         image = Image.open(BytesIO(file_object))
